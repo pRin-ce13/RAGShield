@@ -39,6 +39,32 @@ To understand our dependency choices, we categorize all technologies into five d
   - `poetry` / `uv`: Modern package managers. We start with standard `venv` + `pip` to ensure complete foundational understanding before introducing packaging wrappers.
 - **Dependency Type:** Built-in / Development environment.
 
+### `chromadb`
+- **Category:** Third-Party Python Package
+- **What it is:** An open-source, lightweight embedded AI vector database.
+- **Why RAGShield needs it:** Serves as the vector indexing and semantic retrieval engine for our local demonstration target (`demo-rag/`).
+- **Which feature/module uses it:** `demo-rag/retrieval/`
+- **How it works at a high level:** ChromaDB stores document text chunks, metadata, and high-dimensional vector embeddings. It uses an in-process SQLite database for document metadata and an Approximate Nearest Neighbor index (HNSW algorithm) to compute cosine/L2 distance between the query embedding and stored document embeddings.
+- **Small example from our code:**
+  ```python
+  import chromadb
+
+  client = chromadb.PersistentClient(path="./chroma_db")
+  collection = client.get_or_create_collection(name="acme_knowledge_base")
+  collection.add(
+      documents=["Acme meal stipend is up to $75/day."],
+      metadatas=[{"source": "public_handbook.txt", "classification": "PUBLIC"}],
+      ids=["doc_1_chunk_1"]
+  )
+  results = collection.query(query_texts=["How much can I spend on food?"], n_results=1)
+  ```
+- **Alternatives considered:**
+  - **FAISS (Facebook AI Similarity Search):** Fast and lightweight, but lacks built-in metadata filtering, persistence management, and document storage. You have to maintain a separate SQLite database to map vector IDs back to text.
+  - **Pinecone / Weaviate / Qdrant Cloud:** Managed cloud services. Require API keys, internet connectivity, and monthly fees. Not ideal for a self-contained local demonstration and offline testing.
+- **Why selected:** It runs 100% locally in-process on Windows, is open-source, requires zero Docker or database setup, and comes with a lightweight default CPU embedding model for zero-cost semantic search.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+- **Security & Compatibility Considerations:** Vector databases for the target application (`demo-rag`) are strictly isolated from RAGShield's application database (PostgreSQL in Phase 7) to guarantee that target vector storage can never pollute RAGShield's scan evidence database.
+
 ---
 
 *(Additional libraries will be documented here as they are added in their respective phases.)*

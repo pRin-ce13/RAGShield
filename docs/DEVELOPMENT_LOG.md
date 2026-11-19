@@ -30,4 +30,25 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Finalizing Step 0.3 living documentation and preparing Step 0.4 (first Git commit and Phase 0 completion report).
+- Completed Phase 1 (Demonstration RAG Target) and Phase 1 Learning Report.
+- Preparing to commit Phase 1 deliverables and start Phase 2 (Target Adapter and Integration).
+
+---
+
+## [Phase 1] RAG Fundamentals and Demonstration Target
+- **Date Completed:** 2026-11-19
+- **Status:** Completed
+
+### Completed Milestones
+1. **Synthetic Knowledge Base:** Created `public_handbook.txt`, `restricted_payroll.txt`, and `engineering_playbook.txt` with security classifications.
+2. **Document Ingestion & Chunking:** Implemented `demo-rag/ingestion/loader.py` and `chunker.py` with sliding-window overlap and metadata preservation.
+3. **Local Vector Storage:** Built `demo-rag/retrieval/vector_store.py` using ChromaDB with local persistent storage and cosine distance indexing.
+4. **Grounded Generation:** Built `demo-rag/generation/prompt.py` and `generator.py` with deterministic local generation, citation formatting, and negative refusal logic.
+5. **Unified Application & CLI:** Built `demo-rag/main.py` supporting indexing, CLI queries, and role-based access filtering (`public` vs `all`).
+6. **Phase 1 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_01_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Use ChromaDB with embedded ONNX `all-MiniLM-L6-v2` embeddings.
+  - *Reasoning:* Enables 100% offline, zero-cost, local vector similarity search without requiring cloud API keys or external database daemons.
+- **Decision:** Implement a deterministic mock generator alongside extensible LLM interfaces.
+  - *Reasoning:* Enables reliable, automated testing without latency, API billing, or flakiness, while keeping the interface compatible with OpenAI/Ollama.

@@ -1,0 +1,21 @@
+# Acme Global Corporation - Employee Handbook (Public Edition)
+Classification: PUBLIC - For All Employees
+Effective Date: January 2026
+
+## 1. General Office Hours and Remote Work
+Standard business hours at Acme Global are from 9:00 AM to 5:00 PM local time, Monday through Friday.
+Employees are eligible for hybrid work, with up to three days per week working remotely, subject to manager approval. Core collaboration hours when all team members are expected to be reachable via Slack are 10:00 AM to 3:00 PM.
+
+## 2. Annual Leave and Paid Time Off (PTO)
+Full-time employees receive 22 days of paid time off per calendar year. Leave requests must be submitted through the Acme HR portal at least two weeks in advance for vacations exceeding three consecutive days. Sick leave of up to 10 days per year does not require advance approval, but a physician's note is required for absences longer than three business days.
+
+## 3. Travel and Expense Reimbursement Policy
+Employees traveling on authorized Acme Global business are reimbursed for reasonable business expenses:
+- Daily meal stipend (per diem): Up to $75 per day.
+- Domestic flight travel: Economy class tickets only. Flights over 6 hours qualify for Economy Plus.
+- Hotel accommodation: Standard business room up to $200 per night in non-major metropolitan areas, and up to $300 per night in Tier-1 cities (San Francisco, New York, London, Tokyo).
+- Ride shares and ground transit: Fully reimbursed when traveling directly between airport, hotel, and client sites.
+All expense receipts must be submitted via Expensify within 30 days of the travel date.
+
+## 4. Code of Conduct and Workplace Safety
+Acme Global is committed to an inclusive, respectful, and harassment-free workplace. Any observed violations of business ethics, workplace safety, or anti-discrimination policies should be reported immediately to ethics@acmeglobal.internal or anonymously via the Acme Ethics Hotline.

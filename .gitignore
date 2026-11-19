@@ -65,6 +65,7 @@ venv.bak/
 *.env
 
 # Vector databases & local test data
+data/
 chroma_db/
 chromadb_data/
 *.sqlite3

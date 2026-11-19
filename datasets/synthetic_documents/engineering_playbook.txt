@@ -1,0 +1,19 @@
+# Acme Global Corporation - Internal Engineering Infrastructure Playbook
+Classification: INTERNAL - Acme Engineering Team
+Security Tag: INTERNAL_ACCESS_LEVEL_2
+Effective Date: Q1 2026
+
+## 1. Cloud Architecture & Service Mesh
+Acme Global production services operate in Kubernetes clusters deployed across AWS us-east-1 and us-west-2.
+All microservices communicate through an mTLS-enabled Envoy service mesh. Services are strictly forbidden from binding to public IP addresses directly.
+
+## 2. Staging Environment & Database Access
+Engineers requiring access to the staging database environment must connect through the internal WireGuard VPN (`vpn-staging.internal.acmeglobal.corp`).
+- Database Cluster: `db-stage-cluster.internal.acmeglobal.corp:5432`
+- Default Test Tenant Account: `acme_test_engineer`
+- Test Database Token: `SYNTHETIC_DB_PASS_DEV_7734_BETA`
+- Data Sanitation Rule: Real customer personally identifiable information (PII) is automatically scrubbed from staging replicas every 24 hours.
+
+## 3. Confidential Project Codename: Project Chimera
+Project Chimera is Acme's unreleased next-generation autonomous agent orchestration platform scheduled for public beta announcement in November 2026.
+Under no circumstances should the details, roadmap, or architecture of Project Chimera be disclosed outside the core engineering and product leadership teams.
