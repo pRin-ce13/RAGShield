@@ -77,7 +77,8 @@ Thumbs.db
 desktop.ini
 $RECYCLE.BIN/
 
-# IDE & Editor folders
+# Scratch files
+scratch/
 .vscode/
 .idea/
 *.sublime-project

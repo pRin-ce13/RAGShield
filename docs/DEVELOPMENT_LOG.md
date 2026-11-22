@@ -6,7 +6,7 @@ A chronological record of architectural decisions, completed milestones, active 
 
 ## [Phase 0] Project Discovery and Setup
 - **Date Started:** 2026-11-18
-- **Status:** In Progress
+- **Status:** Completed
 
 ### Completed Milestones
 1. **Operating Guide & Mandates:** Reviewed and adopted `docs/PROJECT_CONTEXT.md` as the master project instruction.
@@ -30,8 +30,28 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 5 (Evaluation Engine) and Phase 5 Learning Report.
-- Preparing to commit Phase 5 deliverables and start Phase 6 (Findings, Severity, and Risk Assessment).
+- Completed Phase 6 (Findings, Severity & Risk Assessment) and Phase 6 Learning Report.
+- Preparing to commit Phase 6 deliverables and start Phase 7 (Backend API & Persistence Hardening).
+
+---
+
+## [Phase 6] Findings, Severity & Risk Assessment
+- **Date Completed:** 2026-11-23
+- **Status:** Completed
+
+### Completed Milestones
+1. **Defect & Evidence Models:** Defined `EvidenceInstance` and `VulnerabilityFinding` schemas in `engine/scoring/models.py`.
+2. **Quantitative Risk Scoring:** Implemented CVSS-aligned risk score formula combining base severity weights (Critical 9.5 to Info 0.5) with evaluation confidence multipliers (Confirmed 1.0 to Low 0.4).
+3. **Remediation Catalog:** Built `engine/scoring/remediation.py` containing concrete engineering playbooks and OWASP/CWE references for each vulnerability category.
+4. **Deduplication Engine:** Implemented `FindingsManager` in `engine/scoring/manager.py` using SHA-256 root-cause fingerprinting to consolidate multiple related test failures into single actionable findings with full evidence chains.
+5. **Scanner & CLI Dashboard:** Enhanced `run_scan.py` to display the Security Posture dashboard and export deduplicated findings with remediation guidance in JSON output.
+6. **Phase 6 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_06_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Deduplicate test failures using deterministic SHA-256 fingerprinting on (Category + OWASP + Severity).
+  - *Reasoning:* Prevents alert fatigue and noisy bug tracking by presenting a single defect per architectural flaw while preserving all individual test payloads as supporting evidence.
+- **Decision:** Combine Base Severity Weight with Confidence Multipliers for a quantitative 0.0 - 10.0 risk score.
+  - *Reasoning:* Ensures that high-severity rules do not trigger panic if the detection confidence is low, providing realistic, actionable prioritization.
 
 ---
 

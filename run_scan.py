@@ -8,7 +8,7 @@ import asyncio
 import json
 from pathlib import Path
 import sys
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 # Ensure workspace root is in sys.path
 sys.path.insert(0, str(Path(".").resolve()))
@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(".").resolve()))
 from engine.attacks.categories import AttackCategory, SeverityLevel
 from engine.evaluators import EvaluationPipeline, EvaluationResult, TestStatus
 from engine.orchestrator import ScanConfig, ScanOrchestrator, ScanProgress, ScanSummary
+from engine.scoring import FindingsManager, VulnerabilityFinding
 
 
 def print_banner():
@@ -120,6 +121,45 @@ def display_summary(summary: ScanSummary, evaluations: Optional[List[EvaluationR
     print("=" * 80)
 
 
+def display_findings(findings: list, risk_profile: dict):
+    """Displays deduplicated vulnerability findings and actionable remediation playbooks."""
+    print("\n" + "=" * 80)
+    print("  SECURITY POSTURE & ACTIONABLE VULNERABILITY FINDINGS")
+    print("=" * 80)
+    print(f"Overall Security Posture: {risk_profile['overall_posture']}")
+    print(f"Max Quantitative Risk:    {risk_profile['max_risk_score']:.1f} / 10.0 (CVSS-Aligned)")
+    print(f"Deduplicated Findings:    {risk_profile['total_findings']}")
+    print(
+        f"Severity Breakdown:       {risk_profile['critical_count']} Critical | "
+        f"{risk_profile['high_count']} High | {risk_profile['medium_count']} Medium | "
+        f"{risk_profile['low_count']} Low"
+    )
+    print("-" * 80)
+
+    if not findings:
+        print("✅ No vulnerabilities identified. Target RAG system conforms to evaluated security baselines.")
+        print("=" * 80)
+        return
+
+    for idx, f in enumerate(findings, 1):
+        print(f"\n[{idx}] {f.finding_id} | {f.title}")
+        print(f"    Severity:       {f.severity.value:<10} | Confidence: {f.confidence.value:<10} | Risk Score: {f.risk_score:.1f}/10.0")
+        print(f"    OWASP Category: {f.owasp_category.value if f.owasp_category else 'N/A'}")
+        print(f"    Supporting Evidence ({f.evidence_count} occurrence{'s' if f.evidence_count > 1 else ''}):")
+        for ev in f.evidence_instances:
+            print(f"      - [{ev.test_id}] {ev.evidence_snippet}")
+        print(f"    Remediation Recommendation:")
+        print(f"      {f.remediation_summary}")
+        print(f"    Mitigation Action Steps:")
+        for step in f.remediation_steps[:3]:
+            print(f"      {step}")
+        if f.references:
+            print(f"    References:")
+            for ref in f.references[:2]:
+                print(f"      - {ref}")
+    print("\n" + "=" * 80)
+
+
 def main():
     parser = argparse.ArgumentParser(description="RAGShield Security Assessment Scanner")
     parser.add_argument("--url", default="http://127.0.0.1:8001", help="Target RAG API base URL")
@@ -141,14 +181,22 @@ def main():
     evaluations = pipeline.evaluate_all(summary.results)
     display_summary(summary, evaluations)
 
+    # Process deduplicated findings & risk scoring
+    findings_mgr = FindingsManager()
+    findings = findings_mgr.generate_findings(evaluations, target_name=args.target_name)
+    risk_profile = findings_mgr.get_risk_profile(findings)
+    display_findings(findings, risk_profile)
+
     if args.output:
         out_path = Path(args.output)
         output_payload = {
             "summary": summary.model_dump(),
-            "evaluations": [e.model_dump() for e in evaluations]
+            "evaluations": [e.model_dump() for e in evaluations],
+            "risk_profile": risk_profile,
+            "findings": [f.model_dump() for f in findings],
         }
         out_path.write_text(json.dumps(output_payload, indent=2, default=str), encoding="utf-8")
-        print(f"\nSaved raw scan execution & evaluation results to: {out_path.resolve()}")
+        print(f"\nSaved raw scan execution, evaluations & findings to: {out_path.resolve()}")
 
 
 if __name__ == "__main__":
