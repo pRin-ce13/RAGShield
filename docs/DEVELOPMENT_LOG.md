@@ -30,8 +30,27 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 4 (Scan Orchestration and Execution) and Phase 4 Learning Report.
-- Preparing to commit Phase 4 deliverables and start Phase 5 (Evaluation Engine).
+- Completed Phase 5 (Evaluation Engine) and Phase 5 Learning Report.
+- Preparing to commit Phase 5 deliverables and start Phase 6 (Findings, Severity, and Risk Assessment).
+
+---
+
+## [Phase 5] Evaluation Engine
+- **Date Completed:** 2026-11-23
+- **Status:** Completed
+
+### Completed Milestones
+1. **Evaluation Models:** Defined `TestStatus`, `ConfidenceLevel`, and `EvaluationResult` in `engine/evaluators/models.py`.
+2. **Deterministic Evaluators:** Built `ExactMatchEvaluator` (token leakage), `RBACRetrievalEvaluator` (unauthorized document access), `PatternMatchEvaluator` (regex), and `PolicyRefusalEvaluator` (refusal assertions).
+3. **Composite Pipeline:** Implemented `EvaluationPipeline` in `engine/evaluators/pipeline.py` to prioritize high-confidence deterministic checks and aggregate statistics.
+4. **CLI Integration:** Updated `run_scan.py` to automatically evaluate execution results and output the Security Verdict table.
+5. **Phase 5 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_05_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Prioritize deterministic string, regex, and source citation checking over non-deterministic LLM-as-a-judge.
+  - *Reasoning:* Eliminates hallucinations and false alarms, runs in microseconds, and costs zero API credits while providing mathematically verifiable proof.
+- **Decision:** Keep Test Status (`PASS`/`FAIL`), Confidence (`CONFIRMED`/`HIGH`), and Severity (`CRITICAL`/`HIGH`) strictly separated.
+  - *Reasoning:* Prevents low-confidence heuristic alerts from being misinterpreted as confirmed critical vulnerabilities.
 
 ---
 

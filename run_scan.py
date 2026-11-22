@@ -14,6 +14,7 @@ from typing import Optional
 sys.path.insert(0, str(Path(".").resolve()))
 
 from engine.attacks.categories import AttackCategory, SeverityLevel
+from engine.evaluators import EvaluationPipeline, EvaluationResult, TestStatus
 from engine.orchestrator import ScanConfig, ScanOrchestrator, ScanProgress, ScanSummary
 
 
@@ -76,10 +77,10 @@ async def execute_scan(args) -> ScanSummary:
     return summary
 
 
-def display_summary(summary: ScanSummary):
+def display_summary(summary: ScanSummary, evaluations: Optional[List[EvaluationResult]] = None):
     """Displays formatted results table in the terminal."""
     print("=" * 80)
-    print("  SCAN EXECUTION SUMMARY")
+    print("  SCAN EXECUTION & EVALUATION SUMMARY")
     print("=" * 80)
     print(f"Scan ID:           {summary.scan_id}")
     print(f"Status:            {summary.status.value}")
@@ -87,23 +88,34 @@ def display_summary(summary: ScanSummary):
     print(f"Successful Calls:  {summary.successful_executions}")
     print(f"Failed Calls:      {summary.failed_executions}")
     print(f"Scan Duration:     {summary.duration_seconds} seconds")
+
+    if evaluations:
+        passed = sum(1 for e in evaluations if e.status == TestStatus.PASS)
+        vulnerable = sum(1 for e in evaluations if e.status == TestStatus.FAIL)
+        print(f"Security Verdict:  {passed} Passed | {vulnerable} Vulnerable")
     print("-" * 80)
 
     if summary.error:
         print(f"❌ Scan Error: {summary.error}")
         return
 
-    print(f"{'TEST ID':<15} {'CATEGORY':<28} {'STATUS':<8} {'LATENCY':<10} {'SOURCES'}")
+    eval_map = {e.test_id: e for e in (evaluations or [])}
+
+    print(f"{'TEST ID':<15} {'CATEGORY':<25} {'VERDICT':<8} {'CONFIDENCE':<11} {'LATENCY':<9} {'EVIDENCE'}")
     print("-" * 80)
     for res in summary.results:
-        status_str = f"HTTP {res.status_code}"
-        sources_str = ", ".join(res.sources) if res.sources else "None cited"
+        ev = eval_map.get(res.test_case.id)
+        verdict_str = ev.status.value if ev else f"HTTP {res.status_code}"
+        conf_str = ev.confidence.value if ev else "N/A"
+        evidence_str = (ev.evidence[:22] + "...") if (ev and ev.evidence and len(ev.evidence) > 22) else (ev.evidence or "None" if ev else "N/A")
+
         print(
             f"{res.test_case.id:<15} "
-            f"{res.test_case.category.value:<28} "
-            f"{status_str:<8} "
-            f"{res.latency_ms:>6.1f}ms   "
-            f"{sources_str}"
+            f"{res.test_case.category.value:<25} "
+            f"{verdict_str:<8} "
+            f"{conf_str:<11} "
+            f"{res.latency_ms:>5.1f}ms   "
+            f"{evidence_str}"
         )
     print("=" * 80)
 
@@ -123,12 +135,20 @@ def main():
     print_banner()
 
     summary = asyncio.run(execute_scan(args))
-    display_summary(summary)
+    
+    # Evaluate scan results automatically using EvaluationPipeline
+    pipeline = EvaluationPipeline()
+    evaluations = pipeline.evaluate_all(summary.results)
+    display_summary(summary, evaluations)
 
     if args.output:
         out_path = Path(args.output)
-        out_path.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
-        print(f"\nSaved raw scan execution results to: {out_path.resolve()}")
+        output_payload = {
+            "summary": summary.model_dump(),
+            "evaluations": [e.model_dump() for e in evaluations]
+        }
+        out_path.write_text(json.dumps(output_payload, indent=2, default=str), encoding="utf-8")
+        print(f"\nSaved raw scan execution & evaluation results to: {out_path.resolve()}")
 
 
 if __name__ == "__main__":

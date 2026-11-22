@@ -3,7 +3,7 @@
 > **Automated Security Testing and Vulnerability Assessment Platform for RAG Applications**
 
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Status](https://img.shields.io/badge/status-Phase%204%20(Scan%20Orchestrator%20Complete)-green.svg)]()
+[![Status](https://img.shields.io/badge/status-Phase%205%20(Evaluation%20Engine%20Complete)-green.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
 
 ---
@@ -42,14 +42,15 @@ RAGShield/
 
 ---
 
-## 🚦 Current Status: Phase 4 (Scan Orchestrator Complete)
+## 🚦 Current Status: Phase 5 (Evaluation Engine Complete)
 
 - [x] Phase 0: Project Discovery & Setup (Git, `.gitignore`, `.venv`, initial docs).
 - [x] Phase 1: RAG Fundamentals & Demonstration Target (`demo-rag/` with ChromaDB, chunking, grounded generation).
 - [x] Phase 2: Target Adapter & Integration (`engine/targets/` HTTP adapter, SSRF defense, FastAPI REST demo).
 - [x] Phase 3: Test-Case Model & Attack Library (`engine/attacks/` Pydantic schema, OWASP mapping, 11 parameterized test cases).
 - [x] Phase 4: Scan Orchestration & Execution (`engine/orchestrator/` concurrency throttling, pre-flight check, `run_scan.py` CLI).
-- [ ] Phase 5: Evaluation Engine (Deterministic evaluators, secret leakage, RBAC, policy assertions).
+- [x] Phase 5: Evaluation Engine (`engine/evaluators/` deterministic token, RBAC, regex, and refusal pipeline).
+- [ ] Phase 6: Findings, Severity & Risk Assessment (Deduplication, CVSS risk scoring, remediation playbooks).
 
 ---
 
