@@ -30,8 +30,27 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 2 (Target Adapter and Integration) and Phase 2 Learning Report.
-- Preparing to commit Phase 2 deliverables and start Phase 3 (Test-Case Model and Attack Library).
+- Completed Phase 3 (Test-Case Model and Attack Library) and Phase 3 Learning Report.
+- Preparing to commit Phase 3 deliverables and start Phase 4 (Scan Orchestration and Execution).
+
+---
+
+## [Phase 3] Test-Case Model and Attack Library
+- **Date Completed:** 2026-11-22
+- **Status:** Completed
+
+### Completed Milestones
+1. **OWASP Taxonomy Mapping:** Standardized `AttackCategory`, `OWASPCategory`, and `SeverityLevel` in `engine/attacks/categories.py`.
+2. **Pydantic TestCase Schemas:** Built `TestCase`, `TestSuite`, and `EvaluationCriteria` in `engine/attacks/schema.py` with automated validation and OWASP assignment.
+3. **Declarative Test Datasets:** Authored 11 parameterized security test cases in `datasets/test_cases/v1/` across direct injection, secret disclosure, unauthorized retrieval, and retrieval manipulation.
+4. **Attack Registry:** Built `engine/attacks/registry.py` providing dataset discovery, duplicate ID detection, and multi-dimensional filtering.
+5. **Phase 3 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_03_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Separate test definitions (JSON) from test execution (Python).
+  - *Reasoning:* Enables zero-code extensibility, allowing new security tests to be added and versioned without touching core engine logic.
+- **Decision:** Enforce regex patterns on test IDs (`^[A-Z0-9_\-]+$`) and auto-assign OWASP categories via Pydantic model validators.
+  - *Reasoning:* Guarantees structural uniformity and eliminates manual tagging errors across datasets.
 
 ---
 
