@@ -30,8 +30,27 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 3 (Test-Case Model and Attack Library) and Phase 3 Learning Report.
-- Preparing to commit Phase 3 deliverables and start Phase 4 (Scan Orchestration and Execution).
+- Completed Phase 4 (Scan Orchestration and Execution) and Phase 4 Learning Report.
+- Preparing to commit Phase 4 deliverables and start Phase 5 (Evaluation Engine).
+
+---
+
+## [Phase 4] Scan Orchestration and Execution
+- **Date Completed:** 2026-11-22
+- **Status:** Completed
+
+### Completed Milestones
+1. **Lifecycle Models:** Defined `ScanConfig`, `ScanStatus`, `TestExecutionResult`, `ScanProgress`, and `ScanSummary` in `engine/orchestrator/models.py`.
+2. **Async Scan Orchestrator:** Engineered `engine/orchestrator/runner.py` with pre-flight health verification, `asyncio.Semaphore` concurrency gating, non-blocking cancellation, and progress telemetry.
+3. **CLI Scanner Tool:** Built `run_scan.py` with ASCII banner, real-time percentage progress bar, and summary results table.
+4. **Automated Verification:** Verified full 11-test scan execution, pre-flight fault tolerance, and filtered category scans.
+5. **Phase 4 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_04_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Use native `asyncio.Semaphore` for concurrency throttling rather than heavy external queuing systems at this stage.
+  - *Reasoning:* Keeps the testing engine lightweight, self-contained, and blazingly fast with zero external dependencies while still protecting targets from Denial of Service.
+- **Decision:** Include pre-flight health checks before launching test suites.
+  - *Reasoning:* Prevents misleading test failures and saves time if the target application is offline or malfunctioning.
 
 ---
 
