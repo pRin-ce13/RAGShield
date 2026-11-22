@@ -3,7 +3,7 @@
 > **Automated Security Testing and Vulnerability Assessment Platform for RAG Applications**
 
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Status](https://img.shields.io/badge/status-Phase%201%20(Demo%20RAG%20Complete)-green.svg)]()
+[![Status](https://img.shields.io/badge/status-Phase%202%20(Target%20Adapter%20Complete)-green.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
 
 ---
@@ -42,11 +42,12 @@ RAGShield/
 
 ---
 
-## 🚦 Current Status: Phase 1 (Demonstration Target Complete)
+## 🚦 Current Status: Phase 2 (Target Adapter Complete)
 
 - [x] Phase 0: Project Discovery & Setup (Git, `.gitignore`, `.venv`, initial docs).
 - [x] Phase 1: RAG Fundamentals & Demonstration Target (`demo-rag/` with ChromaDB, chunking, grounded generation).
-- [ ] Phase 2: Target Adapter & Integration (HTTP interface, SSRF protection).
+- [x] Phase 2: Target Adapter & Integration (`engine/targets/` HTTP adapter, SSRF defense, FastAPI REST demo).
+- [ ] Phase 3: Test-Case Model & Attack Library (Prompt injection, synthetic secret leaks, access boundaries).
 
 ---
 

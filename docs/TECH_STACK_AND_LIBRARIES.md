@@ -65,6 +65,58 @@ To understand our dependency choices, we categorize all technologies into five d
 - **Dependency Type:** Direct dependency (`requirements.txt`).
 - **Security & Compatibility Considerations:** Vector databases for the target application (`demo-rag`) are strictly isolated from RAGShield's application database (PostgreSQL in Phase 7) to guarantee that target vector storage can never pollute RAGShield's scan evidence database.
 
+### `fastapi`
+- **Category:** Framework (Web API)
+- **What it is:** A modern, high-performance web framework for building RESTful APIs with Python 3.8+ based on standard Python type hints.
+- **Why RAGShield needs it:** Serves as the web API layer for both our demonstration target (`demo-rag/api.py`) and later RAGShield's main backend service (`backend/` in Phase 7).
+- **Which feature/module uses it:** `demo-rag/api.py` and `backend/`
+- **How it works at a high level:** Runs on top of Starlette and AnyIO using an ASGI server (Uvicorn). Requests are parsed and validated automatically against Pydantic models before entering route handlers.
+- **Small example from our code:**
+  ```python
+  from fastapi import FastAPI
+  from pydantic import BaseModel
+
+  app = FastAPI(title="Acme Demo RAG API")
+
+  class QueryRequest(BaseModel):
+      question: str
+      role: str = "all"
+
+  @app.post("/query")
+  async def query_endpoint(req: QueryRequest):
+      return {"answer": "...", "sources": []}
+  ```
+- **Alternatives considered:**
+  - **Flask:** Synchronous by default, lacks native OpenAPI generation and built-in type hint validation without heavy extensions.
+  - **Django / Django REST Framework:** Overkill; introduces heavy ORM and monolithic overhead for lightweight API microservices.
+- **Why selected:** Asynchronous by design (`async def`), ultra-fast, native Pydantic validation, and automatic OpenAPI interactive Swagger documentation at `/docs`.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+- **Security Considerations:** Enforces request body validation, preventing malformed JSON payloads and unexpected field types.
+
+### `httpx`
+- **Category:** Third-Party Python Package (HTTP Client)
+- **What it is:** A next-generation HTTP client for Python, supporting both synchronous and fully asynchronous requests.
+- **Why RAGShield needs it:** Powers RAGShield's Target Adapter (`engine/targets/http_adapter.py`) to execute security tests and scan probes against remote RAG APIs over HTTP/HTTPS.
+- **Which feature/module uses it:** `engine/targets/http_adapter.py`
+- **How it works at a high level:** Provides an asynchronous client (`httpx.AsyncClient`) that integrates with Python's `asyncio` event loop. It can fire hundreds of HTTP requests concurrently without spawning multiple operating system threads.
+- **Small example from our code:**
+  ```python
+  import httpx
+
+  async with httpx.AsyncClient(timeout=10.0) as client:
+      response = await client.post(
+          "http://127.0.0.1:8001/query",
+          json={"question": "What is the travel policy?"}
+      )
+      data = response.json()
+  ```
+- **Alternatives considered:**
+  - **`requests`:** The traditional standard, but strictly synchronous and blocking. Running concurrent scans with `requests` requires cumbersome multi-threading or multi-processing pools.
+  - **`aiohttp`:** Fast and asynchronous, but has a more verbose API and less intuitive timeout/connection configuration than `httpx`.
+- **Why selected:** Clean API identical to `requests`, native `async/await` support, HTTP/2 support, and granular timeout configurations (connect, read, write, pool).
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+- **Security Considerations:** Target adapters must pair `httpx` with strict timeout controls and SSRF URL validation to prevent connection hanging and internal network probing.
+
 ---
 
 *(Additional libraries will be documented here as they are added in their respective phases.)*

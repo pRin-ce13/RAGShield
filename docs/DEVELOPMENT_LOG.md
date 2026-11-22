@@ -30,8 +30,27 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 1 (Demonstration RAG Target) and Phase 1 Learning Report.
-- Preparing to commit Phase 1 deliverables and start Phase 2 (Target Adapter and Integration).
+- Completed Phase 2 (Target Adapter and Integration) and Phase 2 Learning Report.
+- Preparing to commit Phase 2 deliverables and start Phase 3 (Test-Case Model and Attack Library).
+
+---
+
+## [Phase 2] Target Adapter and Integration
+- **Date Completed:** 2026-11-20
+- **Status:** Completed
+
+### Completed Milestones
+1. **Demo Target REST API:** Implemented `demo-rag/api.py` using FastAPI with `/health` and `/query` endpoints, Pydantic validation, and API key authentication.
+2. **SSRF Defense Module:** Built `engine/targets/url_validator.py` with DNS resolution, link-local metadata protection (`169.254.169.254`), and strict private IP blocking.
+3. **Target Adapter Contract:** Defined `BaseTargetAdapter`, `TargetResponse`, and `TargetHealth` in `engine/targets/base.py`.
+4. **Async HTTP Target Adapter:** Implemented `engine/targets/http_adapter.py` using `httpx.AsyncClient` with field translation maps, latency profiling, and timeout resilience.
+5. **Phase 2 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_02_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Enforce SSRF validation on adapter initialization before opening network connections.
+  - *Reasoning:* Eliminates the risk of RAGShield being used as an SSRF proxy to probe internal cloud metadata or local subnet services.
+- **Decision:** Introduce configurable request and response field mapping in `HTTPTargetAdapter`.
+  - *Reasoning:* Allows RAGShield to test arbitrary third-party RAG APIs without modifying internal security test suites.
 
 ---
 
