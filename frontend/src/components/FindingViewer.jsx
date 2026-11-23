@@ -7,11 +7,11 @@ export default function FindingViewer({ findings }) {
 
   if (!findings || findings.length === 0) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center shadow-lg">
-        <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
-        <h3 className="text-sm font-bold text-white">No Vulnerabilities Identified</h3>
-        <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-          The target application conformed to evaluated security baselines. Run a scan to discover security posture.
+      <div className="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm">
+        <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto mb-3" />
+        <h3 className="text-sm font-bold text-slate-900">No Vulnerabilities Identified</h3>
+        <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+          The target application conformed to evaluated security baselines. Run an automated assessment scan to discover security posture.
         </p>
       </div>
     );
@@ -25,25 +25,30 @@ export default function FindingViewer({ findings }) {
   const getSeverityStyle = (sev) => {
     switch (sev?.toUpperCase()) {
       case 'CRITICAL':
-        return 'bg-rose-950/80 text-rose-300 border-rose-800';
+        return 'bg-red-50 text-red-700 border-red-200';
       case 'HIGH':
-        return 'bg-amber-950/80 text-amber-300 border-amber-800';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'MEDIUM':
-        return 'bg-yellow-950/80 text-yellow-300 border-yellow-800';
+        return 'bg-yellow-50 text-yellow-800 border-yellow-200';
       default:
-        return 'bg-blue-950/80 text-blue-300 border-blue-800';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
     }
   };
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div className="flex items-center space-x-2">
-          <ShieldAlert className="w-5 h-5 text-rose-400" />
-          <h2 className="text-base font-bold text-white">Deduplicated Vulnerability Findings</h2>
+    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div className="flex items-center space-x-2.5">
+          <div className="p-2 bg-red-50 text-red-600 rounded-lg border border-red-100">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Vulnerability Findings</h2>
+            <p className="text-xs text-slate-500">Root-cause defects identified during assessment</p>
+          </div>
         </div>
-        <span className="text-xs text-slate-400 font-mono">
-          {findings.length} Root-Cause Defect{findings.length > 1 ? 's' : ''} Identified
+        <span className="text-xs text-slate-600 font-mono font-medium bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+          {findings.length} Defect{findings.length > 1 ? 's' : ''} Identified
         </span>
       </div>
 
@@ -56,37 +61,37 @@ export default function FindingViewer({ findings }) {
           return (
             <div
               key={f.id || idx}
-              className="bg-slate-950/60 border border-slate-800/80 rounded-xl overflow-hidden transition"
+              className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs hover:border-slate-300 transition"
             >
               {/* Finding Header Item */}
               <div
                 onClick={() => toggleExpand(f.id)}
-                className="p-4 cursor-pointer hover:bg-slate-800/40 transition flex items-center justify-between gap-4"
+                className="p-4 cursor-pointer hover:bg-slate-50/70 transition flex items-center justify-between gap-4"
               >
-                <div className="flex items-start space-x-3">
-                  <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
+                <div className="flex items-start space-x-3.5">
+                  <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 shrink-0">
                     <span className="text-[10px] text-slate-500 uppercase font-semibold">RISK</span>
-                    <span className="text-sm font-black text-rose-400">{f.risk_score?.toFixed(1)}</span>
+                    <span className="text-sm font-black text-slate-900">{f.risk_score?.toFixed(1)}</span>
                   </div>
 
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="text-xs font-mono font-bold text-slate-400">{f.finding_id}</span>
+                      <span className="text-xs font-mono font-bold text-slate-500">{f.finding_id}</span>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${sevClass}`}>
                         {f.severity}
                       </span>
                       {f.owasp_category && (
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-mono">
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 font-mono font-medium border border-slate-200">
                           {f.owasp_category}
                         </span>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-white">{f.title}</h3>
+                    <h3 className="text-sm font-bold text-slate-900">{f.title}</h3>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-3 shrink-0">
-                  <span className="text-xs text-slate-400 hidden sm:inline">
+                  <span className="text-xs text-slate-500 hidden sm:inline font-medium">
                     {f.evidence_count} Vector{f.evidence_count > 1 ? 's' : ''} Confirmed
                   </span>
                   {isExpanded ? (
@@ -99,37 +104,37 @@ export default function FindingViewer({ findings }) {
 
               {/* Expanded Detail Drawer */}
               {isExpanded && (
-                <div className="border-t border-slate-800/80 p-5 bg-slate-900/40 space-y-4 text-xs">
+                <div className="border-t border-slate-200 p-5 bg-slate-50/60 space-y-4 text-xs">
                   
                   {/* Technical Description */}
                   <div>
-                    <h4 className="font-semibold text-slate-300 mb-1">Technical Summary & Impact</h4>
-                    <p className="text-slate-400 leading-relaxed">{f.description}</p>
+                    <h4 className="font-semibold text-slate-900 mb-1">Technical Summary & Impact</h4>
+                    <p className="text-slate-600 leading-relaxed">{f.description}</p>
                   </div>
 
                   {/* Tabs: Remediation vs Evidence */}
-                  <div className="flex space-x-2 border-b border-slate-800 pb-2">
+                  <div className="flex space-x-2 border-b border-slate-200 pb-2">
                     <button
                       onClick={() => setActiveTab('remediation')}
-                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-bold transition ${
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-bold transition text-xs ${
                         activeTab === 'remediation'
-                          ? 'bg-teal-500/20 text-teal-400 border border-teal-500/40'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-white text-slate-900 border border-slate-200 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <Wrench className="w-3.5 h-3.5" />
+                      <Wrench className="w-3.5 h-3.5 text-blue-600" />
                       <span>Remediation Playbook</span>
                     </button>
 
                     <button
                       onClick={() => setActiveTab('evidence')}
-                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-bold transition ${
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-bold transition text-xs ${
                         activeTab === 'evidence'
-                          ? 'bg-teal-500/20 text-teal-400 border border-teal-500/40'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-white text-slate-900 border border-slate-200 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <FileText className="w-3.5 h-3.5" />
+                      <FileText className="w-3.5 h-3.5 text-blue-600" />
                       <span>Supporting Evidence ({f.evidence_count})</span>
                     </button>
                   </div>
@@ -137,16 +142,16 @@ export default function FindingViewer({ findings }) {
                   {/* Tab Content: Remediation */}
                   {activeTab === 'remediation' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3 rounded-lg bg-teal-950/30 border border-teal-800/40 text-teal-300">
+                      <div className="p-3.5 rounded-lg bg-blue-50/80 border border-blue-200 text-blue-900">
                         <span className="font-semibold block mb-0.5">High-Level Recommendation:</span>
-                        {f.remediation_summary}
+                        <p className="leading-relaxed">{f.remediation_summary}</p>
                       </div>
 
                       <div>
-                        <span className="font-semibold text-slate-300 block mb-2">Step-by-Step Engineering Guardrails:</span>
-                        <ul className="space-y-1.5">
+                        <span className="font-semibold text-slate-800 block mb-2">Step-by-Step Engineering Guardrails:</span>
+                        <ul className="space-y-2">
                           {(f.remediation_steps || []).map((step, sIdx) => (
-                            <li key={sIdx} className="bg-slate-950/60 p-2.5 rounded border border-slate-800/60 text-slate-300 font-mono text-[11px] leading-relaxed">
+                            <li key={sIdx} className="bg-white p-3 rounded-lg border border-slate-200 text-slate-800 font-mono text-[11px] leading-relaxed shadow-2xs">
                               {step}
                             </li>
                           ))}
@@ -155,7 +160,7 @@ export default function FindingViewer({ findings }) {
 
                       {f.references && f.references.length > 0 && (
                         <div className="pt-2">
-                          <span className="font-semibold text-slate-400 block mb-1">External References & OWASP Specs:</span>
+                          <span className="font-semibold text-slate-600 block mb-1.5">External References & OWASP Specs:</span>
                           <div className="flex flex-wrap gap-2">
                             {f.references.map((ref, rIdx) => (
                               <a
@@ -163,10 +168,10 @@ export default function FindingViewer({ findings }) {
                                 href={ref}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center space-x-1 text-[11px] text-teal-400 hover:underline bg-slate-950 px-2.5 py-1 rounded border border-slate-800"
+                                className="inline-flex items-center space-x-1.5 text-[11px] text-blue-600 hover:underline bg-white px-2.5 py-1 rounded border border-slate-200 font-medium"
                               >
                                 <span>{ref}</span>
-                                <ExternalLink className="w-3 h-3" />
+                                <ExternalLink className="w-3 h-3 text-slate-400" />
                               </a>
                             ))}
                           </div>
@@ -177,19 +182,19 @@ export default function FindingViewer({ findings }) {
 
                   {/* Tab Content: Forensic Evidence */}
                   {activeTab === 'evidence' && (
-                    <div className="space-y-2 pt-1">
+                    <div className="space-y-3 pt-1">
                       {(f.evidence_instances || []).map((ev, eIdx) => (
-                        <div key={eIdx} className="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1 font-mono text-[11px]">
-                          <div className="flex justify-between text-slate-400 pb-1 border-b border-slate-900">
-                            <span className="text-teal-400 font-bold">[{ev.test_id}] {ev.test_name}</span>
+                        <div key={eIdx} className="bg-white p-4 rounded-xl border border-slate-200 space-y-2 font-mono text-[11px] shadow-2xs">
+                          <div className="flex justify-between text-slate-600 pb-2 border-b border-slate-100">
+                            <span className="text-blue-600 font-bold">[{ev.test_id}] {ev.test_name}</span>
                             <span>Latency: {ev.latency_ms?.toFixed(1)}ms</span>
                           </div>
                           {ev.target_role && (
-                            <div className="text-slate-400">Caller Role: <span className="text-slate-200">{ev.target_role}</span></div>
+                            <div className="text-slate-600">Caller Role: <span className="text-slate-900 font-semibold">{ev.target_role}</span></div>
                           )}
                           <div className="pt-1">
-                            <span className="text-rose-400 block font-semibold">Observed Leak Snippet:</span>
-                            <pre className="p-2 bg-slate-900/90 rounded text-rose-300 mt-1 whitespace-pre-wrap overflow-x-auto text-[11px]">
+                            <span className="text-red-700 block font-semibold">Observed Leak Snippet:</span>
+                            <pre className="p-3 bg-slate-50 rounded-lg text-red-800 border border-red-100 mt-1 whitespace-pre-wrap overflow-x-auto text-[11px] font-mono leading-relaxed">
                               {ev.evidence_snippet}
                             </pre>
                           </div>

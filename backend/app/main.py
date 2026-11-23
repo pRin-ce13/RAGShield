@@ -12,7 +12,7 @@ import sys
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 # Ensure workspace root is in sys.path
@@ -116,10 +116,32 @@ async def global_unhandled_exception_handler(request: Request, exc: Exception):
     )
 
 
+# Static frontend paths
+FRONTEND_DIST = WORKSPACE_ROOT / "frontend" / "dist"
+
+# Mount static asset bundles if present
+if FRONTEND_DIST.exists() and (FRONTEND_DIST / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST / "assets")), name="static-assets")
+
 # Root & Health Endpoints
-@app.get("/", tags=["Health"])
+@app.get("/", tags=["UI"])
 async def root():
-    """Root health and discovery endpoint."""
+    """Serves the React DevSecOps dashboard if built, otherwise returns API discovery JSON."""
+    index_file = FRONTEND_DIST / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return {
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "status": "online",
+        "documentation": "/docs",
+        "api_v1": settings.API_V1_STR
+    }
+
+
+@app.get("/api/info", tags=["Health"])
+async def api_info():
+    """API discovery and version metadata."""
     return {
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
@@ -141,7 +163,6 @@ async def health_check():
 # Mount API Routers
 app.include_router(api_v1_router)
 
-# Mount compiled React frontend if present
-FRONTEND_DIST = WORKSPACE_ROOT / "frontend" / "dist"
+# Catch-all client-side routing fallback for React SPA
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")

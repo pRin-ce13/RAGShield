@@ -129,7 +129,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {/* Top Navbar */}
       <Navbar
         currentUser={currentUser}
@@ -142,14 +142,14 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* Navigation Tabs Bar */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <div className="flex space-x-2">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
                 activeTab === 'dashboard'
-                  ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -160,8 +160,8 @@ export default function App() {
               onClick={() => setActiveTab('targets')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
                 activeTab === 'targets'
-                  ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Server className="w-4 h-4" />
@@ -172,7 +172,7 @@ export default function App() {
           <button
             onClick={checkHealthAndInit}
             title="Refresh State"
-            className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition"
+            className="p-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition shadow-2xs"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -211,7 +211,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500 bg-white">
         <p>RAGShield — Automated Security Evaluation & Vulnerability Assessment Platform for RAG Applications.</p>
       </footer>
 
