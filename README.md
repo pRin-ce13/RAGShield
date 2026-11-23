@@ -3,7 +3,7 @@
 > **Automated Security Testing and Vulnerability Assessment Platform for RAG Applications**
 
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Status](https://img.shields.io/badge/status-Phase%207%20(Backend%20API%20%26%20Persistence%20Complete)-green.svg)]()
+[![Status](https://img.shields.io/badge/status-Phase%208%20(Frontend%20Dashboard%20Complete)-green.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
 
 ---
@@ -32,7 +32,7 @@ RAGShield is developed modularly across structured phases:
 
 ```text
 RAGShield/
-├── frontend/        # React + TypeScript security dashboard (Phase 8)
+├── frontend/        # React + Tailwind CSS security dashboard (Phase 8)
 ├── backend/         # FastAPI REST service & scan management (Phase 7)
 ├── engine/          # Security testing engine, attacks, & evaluators (Phases 2-6)
 ├── demo-rag/        # Local demonstration RAG target (Phase 1)
@@ -42,7 +42,7 @@ RAGShield/
 
 ---
 
-## 🚦 Current Status: Phase 7 (Backend API & Persistence Complete)
+## 🚦 Current Status: Phase 8 (Frontend Dashboard Complete)
 
 - [x] Phase 0: Project Discovery & Setup (Git, `.gitignore`, `.venv`, initial docs).
 - [x] Phase 1: RAG Fundamentals & Demonstration Target (`demo-rag/` with ChromaDB, chunking, grounded generation).
@@ -52,7 +52,8 @@ RAGShield/
 - [x] Phase 5: Evaluation Engine (`engine/evaluators/` deterministic token, RBAC, regex, and refusal pipeline).
 - [x] Phase 6: Findings, Severity & Risk Assessment (`engine/scoring/` deduplication, CVSS risk scoring, remediation playbooks).
 - [x] Phase 7: Backend API & Persistence Hardening (`backend/app/` FastAPI, SQLAlchemy 2.0, Alembic, JWT & RBAC).
-- [ ] Phase 8: Frontend Dashboard (React + TypeScript + Vite security console).
+- [x] Phase 8: Frontend Dashboard (React + Vite + Tailwind CSS DevSecOps console).
+- [ ] Phase 9: Advanced Security Testing (Multi-turn poisoning, indirect injection, privilege escalation).
 
 ---
 

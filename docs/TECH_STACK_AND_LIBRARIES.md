@@ -215,6 +215,42 @@ To understand our dependency choices, we categorize all technologies into five d
 - **Why selected:** Required by FastAPI for OAuth2 password grant form support.
 - **Dependency Type:** Direct dependency (`requirements.txt`).
 
+### `React` (v19)
+- **Category:** Frontend UI Framework
+- **What it is:** The declarative component-based UI library developed by Meta.
+- **Why RAGShield needs it:** Powers the single-page application (SPA) dashboard for monitoring scans, managing targets, and inspecting vulnerabilities.
+- **Which feature/module uses it:** `frontend/src/`
+- **How it works at a high level:** Maintains an in-memory Virtual DOM tree, reconciles state transitions, and renders DOM elements efficiently based on reactive state changes.
+- **Alternatives considered:** Vue, Svelte, Plain HTML/Jinja2 (SSR). React with pure JavaScript (`.jsx`) was selected to provide a modern, reactive single-page app while avoiding TypeScript complexity for backend-focused engineers.
+- **Dependency Type:** Direct frontend dependency (`frontend/package.json`).
+
+### `Vite` (v6)
+- **Category:** Frontend Build Tool & Dev Server
+- **What it is:** Next-generation frontend tooling offering fast development server start times using native ES modules.
+- **Why RAGShield needs it:** Bundles and optimizes frontend JavaScript, CSS, and JSX assets for production, and provides development API proxying to FastAPI.
+- **Which feature/module uses it:** `frontend/vite.config.js`
+- **How it works at a high level:** Uses `esbuild` for pre-bundling dependencies and `Rollup` for highly optimized, tree-shaken production asset generation into `frontend/dist/`.
+- **Alternatives considered:** Webpack (slower, more complex configuration), Create React App (deprecated).
+- **Dependency Type:** Development dependency (`frontend/package.json`).
+
+### `Tailwind CSS` (v3)
+- **Category:** Utility-First CSS Framework
+- **What it is:** A utility-first CSS framework that generates classes on demand directly from component source code.
+- **Why RAGShield needs it:** Provides a responsive, sleek DevSecOps dark-mode UI theme with zero custom CSS stylesheet overhead.
+- **Which feature/module uses it:** `frontend/src/index.css`, `frontend/tailwind.config.js`
+- **How it works at a high level:** Scans template and component files for utility class names, generates corresponding CSS using PostCSS, and purges unused styles during production build.
+- **Alternatives considered:** Bootstrap, MUI/Material-UI (heavier runtime overhead, opinionated default styles).
+- **Dependency Type:** Development dependency (`frontend/package.json`).
+
+### `Lucide React`
+- **Category:** UI Component & Icon Library
+- **What it is:** An open-source, lightweight icon library for React applications.
+- **Why RAGShield needs it:** Provides standard DevSecOps iconography (shields, alerts, terminal, checks, targets) across dashboard views.
+- **Which feature/module uses it:** `frontend/src/components/`
+- **How it works at a high level:** Exports SVG icons as lightweight, customizable React components that support Tailwind CSS classes for sizing and color.
+- **Alternatives considered:** FontAwesome, React Icons.
+- **Dependency Type:** Direct frontend dependency (`frontend/package.json`).
+
 ---
 
 *(Additional libraries will be documented here as they are added in their respective phases.)*

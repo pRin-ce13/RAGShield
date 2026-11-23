@@ -13,6 +13,7 @@ import sys
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 # Ensure workspace root is in sys.path
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -139,3 +140,8 @@ async def health_check():
 
 # Mount API Routers
 app.include_router(api_v1_router)
+
+# Mount compiled React frontend if present
+FRONTEND_DIST = WORKSPACE_ROOT / "frontend" / "dist"
+if FRONTEND_DIST.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
