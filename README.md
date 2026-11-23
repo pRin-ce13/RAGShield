@@ -3,7 +3,7 @@
 > **Automated Security Testing and Vulnerability Assessment Platform for RAG Applications**
 
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Status](https://img.shields.io/badge/status-Phase%206%20(Findings%20%26%20Risk%20Complete)-green.svg)]()
+[![Status](https://img.shields.io/badge/status-Phase%207%20(Backend%20API%20%26%20Persistence%20Complete)-green.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
 
 ---
@@ -42,7 +42,7 @@ RAGShield/
 
 ---
 
-## 🚦 Current Status: Phase 6 (Findings & Risk Assessment Complete)
+## 🚦 Current Status: Phase 7 (Backend API & Persistence Complete)
 
 - [x] Phase 0: Project Discovery & Setup (Git, `.gitignore`, `.venv`, initial docs).
 - [x] Phase 1: RAG Fundamentals & Demonstration Target (`demo-rag/` with ChromaDB, chunking, grounded generation).
@@ -51,7 +51,8 @@ RAGShield/
 - [x] Phase 4: Scan Orchestration & Execution (`engine/orchestrator/` concurrency throttling, pre-flight check, `run_scan.py` CLI).
 - [x] Phase 5: Evaluation Engine (`engine/evaluators/` deterministic token, RBAC, regex, and refusal pipeline).
 - [x] Phase 6: Findings, Severity & Risk Assessment (`engine/scoring/` deduplication, CVSS risk scoring, remediation playbooks).
-- [ ] Phase 7: Backend API & Persistence Hardening (FastAPI scanner backend, SQLAlchemy SQLite/PostgreSQL persistence).
+- [x] Phase 7: Backend API & Persistence Hardening (`backend/app/` FastAPI, SQLAlchemy 2.0, Alembic, JWT & RBAC).
+- [ ] Phase 8: Frontend Dashboard (React + TypeScript + Vite security console).
 
 ---
 

@@ -117,6 +117,104 @@ To understand our dependency choices, we categorize all technologies into five d
 - **Dependency Type:** Direct dependency (`requirements.txt`).
 - **Security Considerations:** Target adapters must pair `httpx` with strict timeout controls and SSRF URL validation to prevent connection hanging and internal network probing.
 
+### `sqlalchemy`
+- **Category:** Third-Party Python Package / ORM
+- **What it is:** The premier Python SQL toolkit and Object Relational Mapper (ORM), providing an expressive, database-agnostic interface to relational databases.
+- **Why RAGShield needs it:** Persists target configurations, scan runs, test results, vulnerability findings, and user accounts in a relational database.
+- **Which feature/module uses it:** `backend/app/models/`, `backend/app/database/`, `backend/app/repositories/`
+- **How it works at a high level:** SQLAlchemy 2.0 maps Python classes derived from `DeclarativeBase` to database tables. With `AsyncSession` and `create_async_engine`, database queries (`select(Target).where(...)`) execute asynchronously without blocking the event loop.
+- **Small example from our code:**
+  ```python
+  from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+  from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+  class Base(DeclarativeBase):
+      pass
+
+  class Target(Base):
+      __tablename__ = "targets"
+      id: Mapped[str] = mapped_column(primary_key=True)
+      name: Mapped[str] = mapped_column()
+  ```
+- **Alternatives considered:**
+  - **Raw SQL (sqlite3 / psycopg2):** Error-prone, lacks automatic schema type-safety and dialect translation.
+  - **Tortoise-ORM / Peewee:** Smaller community, less enterprise tooling, and limited Alembic migration integration.
+- **Why selected:** Industry standard, battle-tested, excellent async support in v2.0+, and seamless integration with Alembic.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+- **Security Considerations:** SQLAlchemy automatically utilizes parameterized SQL queries, completely eliminating SQL injection vulnerabilities.
+
+### `aiosqlite`
+- **Category:** Third-Party Python Package (Database Driver)
+- **What it is:** An asynchronous interface to SQLite databases using Python's `asyncio` event loop.
+- **Why RAGShield needs it:** Serves as the asynchronous SQLite driver for SQLAlchemy (`sqlite+aiosqlite:///...`), enabling zero-configuration persistent storage in local development and automated testing.
+- **Which feature/module uses it:** `backend/app/database/session.py`
+- **How it works at a high level:** Wraps standard `sqlite3` operations in thread-pool executors to present a clean `async/await` API that integrates with SQLAlchemy's `AsyncEngine`.
+- **Alternatives considered:**
+  - Standard `sqlite3`: Synchronous and blocking; causes event loop lag in FastAPI.
+  - Mandatory `PostgreSQL` (`asyncpg`): Requires running Docker or a local database server, complicating local evaluation.
+- **Why selected:** Provides non-blocking persistence with zero setup. In Phase 11, switching to PostgreSQL is accomplished merely by updating the `DATABASE_URL` environment variable.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+
+### `alembic`
+- **Category:** Third-Party Development & Migration Tool
+- **What it is:** A lightweight database migration tool written for SQLAlchemy.
+- **Why RAGShield needs it:** Manages evolutionary schema migrations, tracking database version revisions over time and applying automated schema changes.
+- **Which feature/module uses it:** `backend/alembic/`
+- **How it works at a high level:** Inspects the SQLAlchemy metadata and compares it against the database catalog to generate versioned migration scripts (`upgrade()` and `downgrade()`).
+- **Alternatives considered:** Manual SQL schema update scripts.
+- **Why selected:** Standard migration framework for SQLAlchemy with automated schema comparison and rollback support.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+
+### `pydantic-settings`
+- **Category:** Third-Party Python Package
+- **What it is:** Environment variable parsing and application configuration management based on Pydantic models.
+- **Why RAGShield needs it:** Safely parses, validates, and manages environment variables from `.env` files (e.g. database URLs, JWT secret keys, token expiry).
+- **Which feature/module uses it:** `backend/app/core/config.py`
+- **How it works at a high level:** Inherits from `BaseSettings`. At startup, it reads OS environment variables and `.env` files, validates data types, and raises errors if critical configurations are missing.
+- **Alternatives considered:** `python-dotenv` with manual `os.getenv()` calls (lacks type-safety and validation).
+- **Why selected:** Extracted from Pydantic v1 into a dedicated library for Pydantic v2; provides strict types, default values, and secrets masking.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+
+### `passlib[bcrypt]` & `bcrypt`
+- **Category:** Third-Party Security Package
+- **What it is:** A comprehensive password hashing library providing secure, salted bcrypt password hashes.
+- **Why RAGShield needs it:** Securely hashes user passwords before storing them in the database, ensuring raw passwords are never saved.
+- **Which feature/module uses it:** `backend/app/security/passwords.py`
+- **How it works at a high level:** Uses the adaptive bcrypt hashing function with a randomly generated salt and configurable work factor (rounds), protecting against rainbow table and brute-force attacks.
+- **Alternatives considered:** Plain SHA-256 (insecure for passwords; lacks salt and key-stretching), Argon2 (more complex C dependency on Windows).
+- **Why selected:** Industry standard, NIST-approved, and native integration with FastAPI security patterns.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+
+### `pyjwt`
+- **Category:** Third-Party Security Package
+- **What it is:** A Python implementation of RFC 7519 (JSON Web Tokens).
+- **Why RAGShield needs it:** Generates, signs, and decodes stateless JWT bearer tokens for user authentication and role-based access control.
+- **Which feature/module uses it:** `backend/app/security/jwt.py`
+- **How it works at a high level:** Encodes a JSON claims payload (user ID, username, roles, expiration timestamp) signed with a cryptographic HMAC-SHA256 secret key.
+- **Alternatives considered:** `python-jose` (older, slower release cadence, maintenance concerns).
+- **Why selected:** Actively maintained, zero dependencies, high performance, and secure token decoding with strict claim verification.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+
+### `email-validator`
+- **Category:** Third-Party Python Package
+- **What it is:** A robust email address syntax and deliverability validation library.
+- **Why RAGShield needs it:** Enables Pydantic `EmailStr` field validation on user registration and authentication payloads.
+- **Which feature/module uses it:** `backend/app/schemas/user.py`
+- **How it works at a high level:** Validates email addresses against RFC 5322 specifications, parses domain names, and normalizes email formats.
+- **Alternatives considered:** Custom regex (error-prone and fails on valid edge cases like plus-addressing or new TLDs).
+- **Why selected:** Official validation provider for Pydantic v2 `EmailStr`.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+
+### `python-multipart`
+- **Category:** Third-Party Python Package
+- **What it is:** A streaming multipart/form-data and urlencoded parser for Python.
+- **Why RAGShield needs it:** Powers FastAPI's `OAuth2PasswordRequestForm` parsing at `/api/v1/auth/login`.
+- **Which feature/module uses it:** `backend/app/api/v1/auth.py`
+- **How it works at a high level:** Parses incoming `application/x-www-form-urlencoded` HTTP bodies into Python form dictionaries for OAuth2 compliance.
+- **Alternatives considered:** JSON-only login (OAuth2 standard Swagger UI expects form data).
+- **Why selected:** Required by FastAPI for OAuth2 password grant form support.
+- **Dependency Type:** Direct dependency (`requirements.txt`).
+
 ---
 
 *(Additional libraries will be documented here as they are added in their respective phases.)*

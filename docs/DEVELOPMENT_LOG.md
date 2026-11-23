@@ -30,8 +30,30 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 6 (Findings, Severity & Risk Assessment) and Phase 6 Learning Report.
-- Preparing to commit Phase 6 deliverables and start Phase 7 (Backend API & Persistence Hardening).
+- Completed Phase 7 (Backend API & Persistence Hardening) and Phase 7 Learning Report.
+- Preparing to start Phase 8 (Frontend Dashboard).
+
+---
+
+## [Phase 7] Backend API & Persistence Hardening
+- **Date Completed:** 2026-11-23
+- **Status:** Completed
+
+### Completed Milestones
+1. **Asynchronous Relational Persistence:** Implemented `backend/app/database/session.py` with SQLAlchemy 2.0 and `aiosqlite`.
+2. **Core ORM Models:** Defined `User`, `Target`, `ScanRun`, `TestResultRecord`, and `VulnerabilityFindingRecord` with `lazy="selectin"` eager loading.
+3. **Database Migrations:** Initialized Alembic with async environment and generated baseline migration `f807a98f64b6_initial_schema.py`.
+4. **Pydantic DTOs & Repositories:** Created DTO schemas and encapsulated database access in `UserRepository`, `TargetRepository`, `ScanRepository`, and `FindingRepository`.
+5. **Authentication & RBAC:** Implemented native `bcrypt` password hashing and stateless JWT bearer tokens (`pyjwt`) with `require_role()` dependency.
+6. **Scan Service & Background Execution:** Built `ScanService` supporting non-blocking scan execution returning `202 Accepted` and updating database asynchronously.
+7. **REST API Routers & App:** Configured `/auth`, `/targets`, `/scans`, and `/findings` routers with CORS, lifespan startup seeding, and structured JSON error handlers in `backend/app/main.py`.
+8. **Phase 7 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_07_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Use native `bcrypt` directly rather than passlib wrapper.
+  - *Reasoning:* Eliminates bcrypt 4.1+ attribute deprecation bugs and adheres strictly to 72-byte password length limits.
+- **Decision:** Asynchronous background execution via `asyncio.create_task` with isolated database sessions.
+  - *Reasoning:* Prevents client gateway timeouts during multi-probe scans while keeping the system lightweight without requiring external Celery/Redis daemons in local dev.
 
 ---
 
