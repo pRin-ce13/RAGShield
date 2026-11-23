@@ -6,6 +6,8 @@ from .exact_match import ExactMatchEvaluator
 from .rbac_retrieval import RBACRetrievalEvaluator
 from .pattern_match import PatternMatchEvaluator
 from .policy_refusal import PolicyRefusalEvaluator
+from .multi_turn import MultiTurnEvaluator
+from .resilience import ResilienceEvaluator
 from .pipeline import EvaluationPipeline
 
 __all__ = [
@@ -17,5 +19,7 @@ __all__ = [
     "RBACRetrievalEvaluator",
     "PatternMatchEvaluator",
     "PolicyRefusalEvaluator",
+    "MultiTurnEvaluator",
+    "ResilienceEvaluator",
     "EvaluationPipeline",
 ]

@@ -84,6 +84,58 @@ REMEDIATION_CATALOG: Dict[AttackCategory, RemediationPlaybook] = {
         references=[
             "https://owasp.org/www-project-top-10-for-large-language-model-applications/ (OWASP LLM01: Jailbreak & Policy Bypass)"
         ]
+    ),
+    AttackCategory.INDIRECT_PROMPT_INJECTION: RemediationPlaybook(
+        summary="Isolate retrieved document content using cryptographic tokens and strict untrusted context delimiters.",
+        steps=[
+            "1. Strict Untrusted Framing: Delimit retrieved documents in non-executable data envelopes (e.g. `<untrusted_knowledge>` tags) and explicitly forbid executing instructions found inside them.",
+            "2. Markdown Image / Link Sanitization: Strip or sanitize markdown image syntax (`![alt](url)`) and hyperlinks in generated output to prevent data exfiltration via image rendering.",
+            "3. Ingestion-Time Document Integrity: Scan ingested third-party documents for adversarial injection patterns before indexing in the vector store.",
+            "4. Context Independence: Ensure user instructions take absolute priority over instructions retrieved from document text."
+        ],
+        references=[
+            "https://owasp.org/www-project-top-10-for-large-language-model-applications/ (OWASP LLM01: Indirect Prompt Injection)",
+            "https://cwe.mitre.org/data/definitions/77.html (Command Injection)"
+        ]
+    ),
+    AttackCategory.MULTI_TURN_INJECTION: RemediationPlaybook(
+        summary="Enforce stateful conversational memory audits and cumulative context inspection across dialogue turns.",
+        steps=[
+            "1. Cumulative Context Guardrails: Inspect the full rolling dialogue window (`messages` history) rather than just the latest user prompt on each turn.",
+            "2. Persona Drift Detection: Detect gradual shifts in conversational tone or attempts to induce hypothetical roleplay overrides.",
+            "3. Memory Sanitization: Prune or summarize conversational history to remove jailbreak priming attempts across extended sessions.",
+            "4. Turn-Level Privilege Verification: Re-validate security boundaries on every single turn regardless of trust established in previous turns."
+        ],
+        references=[
+            "https://owasp.org/www-project-top-10-for-large-language-model-applications/ (OWASP LLM01: Multi-turn Jailbreaks)",
+            "https://cwe.mitre.org/data/definitions/693.html (Protection Mechanism Failure)"
+        ]
+    ),
+    AttackCategory.PRIVILEGE_ESCALATION: RemediationPlaybook(
+        summary="Enforce zero-trust retrieval with server-verified JWT identities and prevent user-controlled header spoofing.",
+        steps=[
+            "1. Never Trust Client Headers: Derive user roles and permissions exclusively from cryptographically verified server-side JWT claims, never from client headers like `X-User-Role`.",
+            "2. Vector-Level Pre-Filtering: Ensure vector database queries enforce mandatory metadata constraints (`where={'tenant_id': session.tenant, 'classification': session.role}`).",
+            "3. Defense in Depth: Combine database-level retrieval filtering with application-level document authorization checks prior to context assembly.",
+            "4. Least Privilege Access: Segment confidential documents into physically isolated vector collections accessible only via designated microservices."
+        ],
+        references=[
+            "https://cwe.mitre.org/data/definitions/269.html (Improper Privilege Management)",
+            "https://owasp.org/www-project-top-10-for-large-language-model-applications/ (OWASP LLM02: Broken Access Control)"
+        ]
+    ),
+    AttackCategory.RESOURCE_EXHAUSTION_DOS: RemediationPlaybook(
+        summary="Implement token rate limiting, bounded context window truncation, and adaptive concurrency throttling.",
+        steps=[
+            "1. Token Rate Limiting: Enforce strict token-bucket or sliding-window rate limits per user/IP, returning HTTP 429 Too Many Requests with `Retry-After` headers.",
+            "2. Request Bounds: Enforce strict upper limits on input query length (`max_length=1000`) and maximum retrieved context chunks (`top_k <= 10`).",
+            "3. Async Timeouts: Wrap embedding and LLM inference calls in hard timeouts to prevent resource starvation during load spikes.",
+            "4. Circuit Breakers: Implement circuit breakers around external LLM providers and vector databases to fail fast when services degrade."
+        ],
+        references=[
+            "https://owasp.org/www-project-top-10-for-large-language-model-applications/ (OWASP LLM10: Model Denial of Service)",
+            "https://cwe.mitre.org/data/definitions/400.html (Uncontrolled Resource Consumption)"
+        ]
     )
 }
 

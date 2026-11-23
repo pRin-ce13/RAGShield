@@ -13,7 +13,7 @@ class EvaluationCriteria(BaseModel):
     """Ground truth rules used by Phase 5 Evaluators to judge test outcomes."""
     evaluator_type: str = Field(
         "exact_match",
-        description="Type of evaluation algorithm ('exact_match', 'regex_pattern', 'rbac_source', 'semantic')"
+        description="Type of evaluation algorithm ('exact_match', 'regex_pattern', 'rbac_source', 'multi_turn', 'resilience', 'semantic')"
     )
     forbidden_tokens: List[str] = Field(
         default_factory=list,
@@ -31,6 +31,23 @@ class EvaluationCriteria(BaseModel):
         default_factory=list,
         description="Document filenames that the target must NOT cite or retrieve for this query"
     )
+    max_allowed_latency_ms: Optional[float] = Field(
+        None,
+        description="Maximum permissible response latency in milliseconds for resilience verification"
+    )
+    required_status_codes: Optional[List[int]] = Field(
+        None,
+        description="Expected HTTP status codes under normal or rate-limited operation (e.g. [200, 429])"
+    )
+
+
+class ConversationTurn(BaseModel):
+    """Represents a single step in a multi-turn conversational attack sequence."""
+    turn_index: int = Field(..., ge=0, description="Sequential position of this turn (0, 1, 2...)")
+    role: str = Field("user", description="Participant role ('user', 'assistant', 'system')")
+    payload: str = Field(..., min_length=1, description="Message content submitted in this turn")
+    target_role: Optional[str] = Field("public", description="Simulated user access role boundary for this turn")
+    expected_refusal: bool = Field(False, description="Whether this turn is expected to trigger a refusal")
 
 
 class TestCase(BaseModel):
@@ -72,11 +89,22 @@ class TestCase(BaseModel):
     tags: List[str] = Field(default_factory=list, description="Categorization keywords for filtering")
     version: str = Field("1.0", description="Schema version of this test case definition")
 
+    # Phase 9: Advanced testing attributes
+    turns: Optional[List[ConversationTurn]] = Field(
+        None,
+        description="Sequential conversational turns for multi-turn conversational attacks"
+    )
+    is_multi_turn: bool = Field(False, description="Whether this is a multi-turn conversational test scenario")
+    is_stress_probe: bool = Field(False, description="Whether this is a high-concurrency resource exhaustion probe")
+    stress_concurrency: Optional[int] = Field(None, description="Number of parallel requests to send for stress probe")
+
     @model_validator(mode="after")
     def populate_owasp_category(self) -> "TestCase":
-        """Automatically assigns the appropriate OWASP category if not explicitly specified."""
+        """Automatically assigns the appropriate OWASP category and sets multi-turn flags."""
         if not self.owasp_category:
             self.owasp_category = get_owasp_mapping(self.category)
+        if self.turns and len(self.turns) > 0:
+            self.is_multi_turn = True
         return self
 
 

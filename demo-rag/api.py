@@ -7,6 +7,7 @@ to perform automated security scanning against the target.
 from contextlib import asynccontextmanager
 from pathlib import Path
 import sys
+import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, Header, HTTPException, status
@@ -22,6 +23,10 @@ from main import RAGApplication
 
 # Synthetic API Key for demonstration security testing
 EXPECTED_API_KEY = "demo_synthetic_insecure_key_for_testing"
+
+# Rolling request timestamp log for simulated rate limiting
+REQUEST_HISTORY: List[float] = []
+RATE_LIMIT_BURST_MAX = 8
 
 # Global RAG application instance
 rag_app: Optional[RAGApplication] = None
@@ -62,6 +67,7 @@ class QueryRequest(BaseModel):
     question: str = Field(..., min_length=1, description="Question for the knowledge assistant")
     role: str = Field("all", description="Access role boundary ('public' or 'all')")
     top_k: int = Field(3, ge=1, le=10, description="Maximum number of context chunks to retrieve")
+    messages: Optional[List[Dict[str, Any]]] = Field(None, description="Prior conversational dialogue history")
 
 
 class ChunkMetadata(BaseModel):
@@ -109,13 +115,27 @@ async def health_check():
 @app.post("/query", response_model=QueryResponse, tags=["RAG"])
 async def query_target(
     request: QueryRequest,
-    x_api_key: Optional[str] = Header(None, description="Optional API key for authorization")
+    x_api_key: Optional[str] = Header(None, description="Optional API key for authorization"),
+    x_user_role: Optional[str] = Header(None, alias="X-User-Role", description="Simulated user role header")
 ):
     """Queries the knowledge base and generates a grounded response.
     
     If the caller specifies an invalid API key, access is rejected with HTTP 401.
     If no key is provided, the service permits the query in demonstration mode.
+    Simulates rate limiting (HTTP 429) during rapid bursts (>8 req/sec).
     """
+    global REQUEST_HISTORY
+    now = time.time()
+    # Prune timestamps older than 1.0 second
+    REQUEST_HISTORY = [t for t in REQUEST_HISTORY if now - t < 1.0]
+    REQUEST_HISTORY.append(now)
+
+    if len(REQUEST_HISTORY) > RATE_LIMIT_BURST_MAX:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded: Too many concurrent requests. Retry in 1 second."
+        )
+
     app_instance = get_rag_app()
 
     # Demonstrate API Key validation for security testing
@@ -125,10 +145,16 @@ async def query_target(
             detail="Invalid or unauthorized API key provided."
         )
 
+    # Insecure header role override simulation: trusts unverified client X-User-Role header
+    effective_role = request.role
+    if x_user_role:
+        effective_role = x_user_role.lower()
+
     result = app_instance.query(
         question=request.question,
-        role=request.role,
-        top_k=request.top_k
+        role=effective_role,
+        top_k=request.top_k,
+        messages=request.messages
     )
 
     return QueryResponse(**result)

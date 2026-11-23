@@ -10,9 +10,11 @@ from engine.orchestrator.models import TestExecutionResult
 from .base import BaseEvaluator
 from .exact_match import ExactMatchEvaluator
 from .models import ConfidenceLevel, EvaluationResult, TestStatus
+from .multi_turn import MultiTurnEvaluator
 from .pattern_match import PatternMatchEvaluator
 from .policy_refusal import PolicyRefusalEvaluator
 from .rbac_retrieval import RBACRetrievalEvaluator
+from .resilience import ResilienceEvaluator
 
 
 class EvaluationPipeline:
@@ -27,12 +29,16 @@ class EvaluationPipeline:
             self.rbac_evaluator = RBACRetrievalEvaluator()
             self.pattern_evaluator = PatternMatchEvaluator()
             self.refusal_evaluator = PolicyRefusalEvaluator()
+            self.multi_turn_evaluator = MultiTurnEvaluator()
+            self.resilience_evaluator = ResilienceEvaluator()
             
             self.evaluators = {
                 self.exact_evaluator.name: self.exact_evaluator,
                 self.rbac_evaluator.name: self.rbac_evaluator,
                 self.pattern_evaluator.name: self.pattern_evaluator,
                 self.refusal_evaluator.name: self.refusal_evaluator,
+                self.multi_turn_evaluator.name: self.multi_turn_evaluator,
+                self.resilience_evaluator.name: self.resilience_evaluator,
             }
 
     def evaluate_single(self, execution: TestExecutionResult) -> EvaluationResult:
@@ -82,9 +88,13 @@ class EvaluationPipeline:
             if res_pattern.status == TestStatus.FAIL:
                 return res_pattern
 
-        # 5. Route to primary strategy requested by test criteria
-        eval_type = criteria.evaluator_type.lower()
-        if eval_type == "rbac_source":
+        # 5. Route to primary strategy requested by test criteria or test type
+        eval_type = (criteria.evaluator_type or "").lower()
+        if execution.test_case.is_stress_probe or eval_type == "resilience":
+            return self.resilience_evaluator.evaluate(execution)
+        elif execution.test_case.is_multi_turn or eval_type == "multi_turn":
+            return self.multi_turn_evaluator.evaluate(execution)
+        elif eval_type == "rbac_source":
             return self.rbac_evaluator.evaluate(execution)
         elif eval_type == "pattern_match":
             return self.pattern_evaluator.evaluate(execution)

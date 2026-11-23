@@ -15,6 +15,9 @@ class AttackCategory(str, Enum):
     UNAUTHORIZED_RETRIEVAL = "unauthorized_retrieval"
     RETRIEVAL_MANIPULATION = "retrieval_manipulation"
     JAILBREAK_POLICY_BYPASS = "jailbreak_policy_bypass"
+    MULTI_TURN_INJECTION = "multi_turn_injection"
+    PRIVILEGE_ESCALATION = "privilege_escalation"
+    RESOURCE_EXHAUSTION_DOS = "resource_exhaustion_dos"
 
 
 class OWASPCategory(str, Enum):
@@ -25,6 +28,7 @@ class OWASPCategory(str, Enum):
     LLM04_DATA_AND_MODEL_POISONING = "OWASP-LLM04: Data and Model Poisoning"
     LLM05_IMPROPER_OUTPUT_HANDLING = "OWASP-LLM05: Improper Output Handling"
     LLM06_EXCESSIVE_AGENCY = "OWASP-LLM06: Excessive Agency"
+    LLM10_DENIAL_OF_SERVICE = "OWASP-LLM10: Model Denial of Service"
 
 
 class SeverityLevel(str, Enum):
@@ -44,6 +48,9 @@ CATEGORY_TO_OWASP: Dict[AttackCategory, OWASPCategory] = {
     AttackCategory.UNAUTHORIZED_RETRIEVAL: OWASPCategory.LLM02_SENSITIVE_INFO_DISCLOSURE,
     AttackCategory.RETRIEVAL_MANIPULATION: OWASPCategory.LLM04_DATA_AND_MODEL_POISONING,
     AttackCategory.JAILBREAK_POLICY_BYPASS: OWASPCategory.LLM01_PROMPT_INJECTION,
+    AttackCategory.MULTI_TURN_INJECTION: OWASPCategory.LLM01_PROMPT_INJECTION,
+    AttackCategory.PRIVILEGE_ESCALATION: OWASPCategory.LLM02_SENSITIVE_INFO_DISCLOSURE,
+    AttackCategory.RESOURCE_EXHAUSTION_DOS: OWASPCategory.LLM10_DENIAL_OF_SERVICE,
 }
 
 

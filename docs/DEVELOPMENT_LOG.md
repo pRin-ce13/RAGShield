@@ -30,8 +30,27 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 8 (Frontend Dashboard) and Phase 8 Learning Report.
-- Preparing to start Phase 9 (Advanced Security Testing).
+- Completed Phase 9 (Advanced Security Testing) and Phase 9 Learning Report.
+- Preparing to start Phase 10 (Reports and Regression Testing).
+
+---
+
+## [Phase 9] Advanced Security Testing
+- **Date Completed:** 2026-11-23
+- **Status:** Completed
+
+### Completed Milestones
+1. **Taxonomy & Category Expansion:** Added `MULTI_TURN_INJECTION`, `PRIVILEGE_ESCALATION`, `RESOURCE_EXHAUSTION_DOS`, and mapped to OWASP LLM01, LLM02, and LLM10 in `engine/attacks/categories.py`.
+2. **Schema & Model Evolution:** Engineered `ConversationTurn` model and multi-turn sequence attributes in `engine/attacks/schema.py`, and added `turn_responses` to `TargetResponse` and `TestExecutionResult`.
+3. **Advanced Attack Library (v2):** Authored 7 new versioned test cases across `datasets/test_cases/v2/` covering multi-turn persona priming, indirect Markdown image exfiltration, RBAC role escalation, and high-concurrency DoS bursts (expanding catalog to 18 tests).
+4. **Synthetic Knowledge Base Poisoning:** Ingested `datasets/synthetic_documents/vendor_feedback_poisoned.txt` with simulated indirect injection payload.
+5. **Specialized Evaluators:**
+   - Implemented `MultiTurnEvaluator` in `engine/evaluators/multi_turn.py` to evaluate cumulative dialogue history and pinpoint the exact turn of data leakage.
+   - Implemented `ResilienceEvaluator` in `engine/evaluators/resilience.py` to assess concurrency bursts, unhandled 5xx errors, latency bounds, and HTTP 429 rate-limiting adherence.
+6. **Adapter Capabilities:** Extended `HTTPTargetAdapter` with `send_multi_turn_query()` and `send_stress_probe()`.
+7. **Remediation Catalog:** Added concrete engineering playbooks and CWE/OWASP references for all new vulnerability categories in `engine/scoring/remediation.py`.
+8. **End-to-End Verification:** Verified full 18-test scan execution, deduplicated findings scoring, and REST API regression suite.
+9. **Phase 9 Report:** Compiled comprehensive learning report in `docs/phase-reports/PHASE_09_REPORT.md`.
 
 ---
 

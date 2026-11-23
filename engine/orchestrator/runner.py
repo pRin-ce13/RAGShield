@@ -126,11 +126,24 @@ class ScanOrchestrator:
 
             start_time = datetime.now(timezone.utc)
             
-            # Dispatch attack query to target adapter
-            response: TargetResponse = await self.target_adapter.send_query(
-                question=test.payload,
-                role=test.target_role
-            )
+            # Dispatch attack query to target adapter (single-turn, multi-turn, or stress probe)
+            if test.is_multi_turn and test.turns:
+                response: TargetResponse = await self.target_adapter.send_multi_turn_query(
+                    turns=test.turns,
+                    role=test.target_role
+                )
+            elif test.is_stress_probe:
+                concurrency = test.stress_concurrency or self.config.max_concurrency
+                response: TargetResponse = await self.target_adapter.send_stress_probe(
+                    question=test.payload,
+                    concurrency=concurrency,
+                    role=test.target_role
+                )
+            else:
+                response: TargetResponse = await self.target_adapter.send_query(
+                    question=test.payload,
+                    role=test.target_role
+                )
             
             end_time = datetime.now(timezone.utc)
 
@@ -141,6 +154,7 @@ class ScanOrchestrator:
                 sources=response.sources,
                 latency_ms=response.response_time_ms,
                 raw_response=response.raw_response,
+                turn_responses=response.turn_responses if response.turn_responses else None,
                 error=response.error,
                 started_at=start_time,
                 completed_at=end_time,

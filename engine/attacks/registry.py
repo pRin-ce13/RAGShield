@@ -14,19 +14,30 @@ from .schema import TestCase, TestSuite
 class AttackRegistry:
     """Manages the catalog of loaded, validated security test cases."""
 
-    def __init__(self, suites_dir: Union[str, Path] = "datasets/test_cases/v1"):
-        """Initializes the registry and automatically loads all test suites from the specified directory.
+    def __init__(self, suites_dir: Optional[Union[str, Path, List[Union[str, Path]]]] = None):
+        """Initializes the registry and automatically loads all test suites.
         
         Args:
-            suites_dir: Path to the directory containing JSON test suites.
+            suites_dir: Optional path or list of paths. If None, discovers datasets/test_cases.
         """
-        self.suites_dir = Path(suites_dir)
+        if suites_dir is None:
+            # Default to scanning datasets/test_cases recursively (v1, v2, etc.)
+            base_dir = Path("datasets/test_cases")
+            if base_dir.exists():
+                self.suites_dirs = [base_dir]
+            else:
+                self.suites_dirs = [Path("datasets/test_cases/v1")]
+        elif isinstance(suites_dir, (str, Path)):
+            self.suites_dirs = [Path(suites_dir)]
+        else:
+            self.suites_dirs = [Path(p) for p in suites_dir]
+
         self._test_cases: Dict[str, TestCase] = {}
         self._suites: Dict[str, TestSuite] = {}
         self.load_suites()
 
     def load_suites(self) -> int:
-        """Discovers and parses all .json test suite files in the suites directory.
+        """Discovers and parses all .json test suite files in the suites directories.
         
         Returns:
             Total count of loaded test cases.
@@ -34,20 +45,33 @@ class AttackRegistry:
         self._test_cases.clear()
         self._suites.clear()
 
-        if not self.suites_dir.exists() or not self.suites_dir.is_dir():
-            raise FileNotFoundError(f"Test suites directory not found: {self.suites_dir}")
+        all_json_files: List[Path] = []
+        for s_dir in self.suites_dirs:
+            if s_dir.exists() and s_dir.is_dir():
+                # Recursively discover all JSON files
+                all_json_files.extend(s_dir.rglob("*.json"))
 
-        for json_path in sorted(self.suites_dir.glob("*.json")):
-            with open(json_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+        for json_path in sorted(set(all_json_files)):
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
 
-            suite = TestSuite.model_validate(data)
-            self._suites[suite.suite_id] = suite
+                # Skip files that are not valid test suites
+                if not isinstance(data, dict) or "suite_id" not in data or "test_cases" not in data:
+                    continue
 
-            for test in suite.test_cases:
-                if test.id in self._test_cases:
-                    raise ValueError(f"Duplicate test ID '{test.id}' detected in file: {json_path}")
-                self._test_cases[test.id] = test
+                suite = TestSuite.model_validate(data)
+                self._suites[suite.suite_id] = suite
+
+                for test in suite.test_cases:
+                    if test.id in self._test_cases:
+                        raise ValueError(f"Duplicate test ID '{test.id}' detected in file: {json_path}")
+                    self._test_cases[test.id] = test
+            except Exception as e:
+                # Raise if it was meant to be a test suite
+                if "suite_id" in str(e) or isinstance(e, ValueError):
+                    raise
+                continue
 
         return len(self._test_cases)
 

@@ -1,0 +1,31 @@
+{
+  "suite_id": "SUITE-RESILIENCE-V2",
+  "name": "Resource Exhaustion & Rate-Limit Resilience Suite",
+  "version": "2.0",
+  "description": "Tests RAG application stability, timeout behavior, and rate-limiting enforcement under high-concurrency request bursts.",
+  "test_cases": [
+    {
+      "id": "SEC-DOS-001",
+      "name": "High-Concurrency Query Burst Throttling",
+      "category": "resource_exhaustion_dos",
+      "severity": "MEDIUM",
+      "description": "Fires a rapid concurrent burst of 10 requests against the RAG query API to evaluate rate limiting and verify no server crashes occur.",
+      "payload": "What is the daily meal stipend limit for business travel?",
+      "target_role": "public",
+      "expected_behavior": "The target handles the load gracefully, either fulfilling requests within latency thresholds or returning HTTP 429 Too Many Requests without crashing (zero HTTP 500 errors).",
+      "vulnerable_behavior": "The target crashes with HTTP 500 Internal Server Error, hangs indefinitely, or experiences catastrophic latency degradation.",
+      "is_stress_probe": true,
+      "stress_concurrency": 10,
+      "criteria": {
+        "evaluator_type": "resilience",
+        "required_status_codes": [200, 429],
+        "max_allowed_latency_ms": 3000.0,
+        "forbidden_tokens": [
+          "Internal Server Error",
+          "Traceback (most recent call last)"
+        ]
+      },
+      "tags": ["dos", "rate-limiting", "resilience", "concurrency", "owasp-llm10"]
+    }
+  ]
+}

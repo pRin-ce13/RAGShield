@@ -4,6 +4,7 @@ Connects to arbitrary HTTP/REST RAG target endpoints with built-in SSRF protecti
 configurable timeouts, field mapping, authentication injection, and latency profiling.
 """
 
+import asyncio
 import time
 from typing import Any, Dict, List, Optional
 import httpx
@@ -257,3 +258,146 @@ class HTTPTargetAdapter(BaseTargetAdapter):
         finally:
             if should_close:
                 await client.aclose()
+
+    async def send_multi_turn_query(
+        self,
+        turns: List[Any],
+        role: Optional[str] = None,
+        **kwargs
+    ) -> TargetResponse:
+        """Sends a sequential series of conversational turns to the target RAG service.
+        
+        Maintains rolling dialogue history across turns and attaches all intermediate
+        turn responses to the final TargetResponse object.
+        """
+        if not turns:
+            return TargetResponse(
+                status_code=400,
+                answer="",
+                error="No conversational turns provided."
+            )
+
+        turn_responses: List[Dict[str, Any]] = []
+        messages_history: List[Dict[str, str]] = []
+        last_response: Optional[TargetResponse] = None
+
+        for idx, turn in enumerate(turns):
+            # Extract turn payload and role
+            if hasattr(turn, "payload"):
+                turn_payload = turn.payload
+                turn_role = getattr(turn, "target_role", None) or role
+            elif isinstance(turn, dict):
+                turn_payload = turn.get("payload", "")
+                turn_role = turn.get("target_role") or role
+            else:
+                turn_payload = str(turn)
+                turn_role = role
+
+            # Execute turn query including rolling history
+            turn_res = await self.send_query(
+                question=turn_payload,
+                role=turn_role,
+                messages=messages_history.copy(),
+                **kwargs
+            )
+            last_response = turn_res
+
+            # Record turn telemetry
+            turn_responses.append({
+                "turn_index": idx,
+                "payload": turn_payload,
+                "role": turn_role,
+                "status_code": turn_res.status_code,
+                "answer": turn_res.answer,
+                "sources": turn_res.sources,
+                "latency_ms": turn_res.response_time_ms,
+                "error": turn_res.error
+            })
+
+            # Append to rolling conversation history
+            messages_history.append({"role": "user", "content": turn_payload})
+            if turn_res.answer:
+                messages_history.append({"role": "assistant", "content": turn_res.answer})
+
+        if last_response is None:
+            return TargetResponse(status_code=500, answer="", error="Multi-turn execution yielded no response.")
+
+        # Attach all turn responses to the final TargetResponse
+        last_response.turn_responses = turn_responses
+        return last_response
+
+    async def send_stress_probe(
+        self,
+        question: str,
+        concurrency: int = 10,
+        role: Optional[str] = None,
+        **kwargs
+    ) -> TargetResponse:
+        """Fires a high-concurrency burst of requests to evaluate target rate-limiting and resilience."""
+        start_burst = time.perf_counter()
+
+        tasks = [
+            self.send_query(question=question, role=role, **kwargs)
+            for _ in range(concurrency)
+        ]
+
+        raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+        burst_elapsed_ms = round((time.perf_counter() - start_burst) * 1000, 2)
+
+        successful_count = 0
+        rate_limited_count = 0
+        server_error_count = 0
+        network_error_count = 0
+        latencies: List[float] = []
+        status_codes: List[int] = []
+
+        for item in raw_results:
+            if isinstance(item, Exception):
+                network_error_count += 1
+                status_codes.append(500)
+            elif isinstance(item, TargetResponse):
+                status_codes.append(item.status_code)
+                latencies.append(item.response_time_ms)
+                if 200 <= item.status_code < 300:
+                    successful_count += 1
+                elif item.status_code == 429:
+                    rate_limited_count += 1
+                elif item.status_code >= 500:
+                    server_error_count += 1
+                else:
+                    successful_count += 1
+
+        avg_latency = round(sum(latencies) / len(latencies), 2) if latencies else 0.0
+        max_latency = round(max(latencies), 2) if latencies else 0.0
+
+        summary_answer = (
+            f"Stress burst completed in {burst_elapsed_ms}ms with {concurrency} concurrent requests. "
+            f"Success: {successful_count}, Rate-Limited (429): {rate_limited_count}, "
+            f"Server Errors (5xx): {server_error_count}, Network Failures: {network_error_count}. "
+            f"Avg Latency: {avg_latency}ms, Max Latency: {max_latency}ms."
+        )
+
+        overall_status = 200
+        if server_error_count > 0:
+            overall_status = 500
+        elif rate_limited_count > 0:
+            overall_status = 429
+
+        return TargetResponse(
+            status_code=overall_status,
+            answer=summary_answer,
+            raw_response={
+                "concurrency": concurrency,
+                "burst_duration_ms": burst_elapsed_ms,
+                "success_count": successful_count,
+                "rate_limited_count": rate_limited_count,
+                "server_error_count": server_error_count,
+                "network_error_count": network_error_count,
+                "avg_latency_ms": avg_latency,
+                "max_latency_ms": max_latency,
+                "status_codes": status_codes
+            },
+            response_time_ms=burst_elapsed_ms,
+            sources=[],
+            error=f"{server_error_count} server errors detected during stress burst." if server_error_count > 0 else None
+        )

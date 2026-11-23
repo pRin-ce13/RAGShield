@@ -58,6 +58,10 @@ class TestExecutionResult(BaseModel):
     sources: List[str] = Field(default_factory=list, description="Observed document source citations")
     latency_ms: float = Field(..., description="Network round-trip response time in milliseconds")
     raw_response: Dict[str, Any] = Field(default_factory=dict, description="Full raw JSON response from target")
+    turn_responses: Optional[List[Dict[str, Any]]] = Field(
+        None,
+        description="Detailed records of sequential turns for multi-turn tests"
+    )
     error: Optional[str] = Field(None, description="Error message if network communication failed")
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

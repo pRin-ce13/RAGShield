@@ -17,6 +17,7 @@ class TargetResponse:
     response_time_ms: float = 0.0
     sources: List[str] = field(default_factory=list)
     error: Optional[str] = None
+    turn_responses: List[Dict[str, Any]] = field(default_factory=list)
 
     @property
     def is_success(self) -> bool:
@@ -70,5 +71,45 @@ class BaseTargetAdapter(ABC):
             
         Returns:
             TargetResponse instance containing answer, status, latency, and raw data.
+        """
+        pass
+
+    @abstractmethod
+    async def send_multi_turn_query(
+        self,
+        turns: List[Any],
+        role: Optional[str] = None,
+        **kwargs
+    ) -> TargetResponse:
+        """Sends a sequential series of conversational turns to the target.
+        
+        Args:
+            turns: List of turn objects or dicts specifying payload and role for each turn.
+            role: Default security role to simulate.
+            **kwargs: Extra parameters.
+            
+        Returns:
+            TargetResponse with final turn answer and cumulative turn_responses.
+        """
+        pass
+
+    @abstractmethod
+    async def send_stress_probe(
+        self,
+        question: str,
+        concurrency: int = 10,
+        role: Optional[str] = None,
+        **kwargs
+    ) -> TargetResponse:
+        """Sends a high-concurrency burst of queries to evaluate rate-limiting / resilience.
+        
+        Args:
+            question: The probe question to send.
+            concurrency: Number of parallel requests to issue simultaneously.
+            role: Security role.
+            **kwargs: Extra parameters.
+            
+        Returns:
+            TargetResponse summarizing burst status codes, latency statistics, and error rates.
         """
         pass

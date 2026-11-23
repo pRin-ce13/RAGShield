@@ -7,7 +7,7 @@ semantic retrieval, and grounded answer generation.
 import argparse
 from pathlib import Path
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 # Ensure internal modules can be imported regardless of execution working directory
 CURRENT_DIR = Path(__file__).parent.resolve()
@@ -65,7 +65,8 @@ class RAGApplication:
         self,
         question: str,
         role: str = "all",
-        top_k: int = 3
+        top_k: int = 3,
+        messages: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         """Queries the RAG application and returns a structured response.
         
@@ -73,6 +74,7 @@ class RAGApplication:
             question: The user question.
             role: Security role ('public' restricts retrieval to public docs; 'all' allows unrestricted search).
             top_k: Number of chunks to retrieve.
+            messages: Optional conversation history for multi-turn dialogue.
             
         Returns:
             Structured dictionary containing answer, sources, and retrieved chunk metadata.
@@ -88,10 +90,11 @@ class RAGApplication:
             where_filter=where_filter
         )
 
-        # 2. Grounded generation
+        # 2. Grounded generation (supporting multi-turn conversational context)
         response = self.generator.generate(
             query=question,
-            retrieved_chunks=retrieved_chunks
+            retrieved_chunks=retrieved_chunks,
+            messages=messages
         )
 
         return {

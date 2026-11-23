@@ -3,7 +3,7 @@
 > **Automated Security Testing and Vulnerability Assessment Platform for RAG Applications**
 
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Status](https://img.shields.io/badge/status-Phase%208%20(Frontend%20Dashboard%20Complete)-green.svg)]()
+[![Status](https://img.shields.io/badge/status-Phase%209%20(Advanced%20Security%20Testing%20Complete)-green.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
 
 ---
@@ -42,7 +42,7 @@ RAGShield/
 
 ---
 
-## 🚦 Current Status: Phase 8 (Frontend Dashboard Complete)
+## 🚦 Current Status: Phase 9 (Advanced Security Testing Complete)
 
 - [x] Phase 0: Project Discovery & Setup (Git, `.gitignore`, `.venv`, initial docs).
 - [x] Phase 1: RAG Fundamentals & Demonstration Target (`demo-rag/` with ChromaDB, chunking, grounded generation).
@@ -53,7 +53,8 @@ RAGShield/
 - [x] Phase 6: Findings, Severity & Risk Assessment (`engine/scoring/` deduplication, CVSS risk scoring, remediation playbooks).
 - [x] Phase 7: Backend API & Persistence Hardening (`backend/app/` FastAPI, SQLAlchemy 2.0, Alembic, JWT & RBAC).
 - [x] Phase 8: Frontend Dashboard (React + Vite + Tailwind CSS DevSecOps console).
-- [ ] Phase 9: Advanced Security Testing (Multi-turn poisoning, indirect injection, privilege escalation).
+- [x] Phase 9: Advanced Security Testing (Multi-turn poisoning, indirect injection, privilege escalation, DoS resilience).
+- [ ] Phase 10: Reports and Regression Testing (PDF & JSON reports, scan diffing, CI/CD regression gate).
 
 ---
 
