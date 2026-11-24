@@ -1,9 +1,39 @@
 import React, { useState } from 'react';
-import { ShieldAlert, ChevronDown, ChevronUp, ExternalLink, Wrench, FileText, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, ChevronDown, ChevronUp, ExternalLink, Wrench, FileText, CheckCircle2, Download, FileJson, Loader2 } from 'lucide-react';
+import { api } from '../api/client';
 
-export default function FindingViewer({ findings }) {
+export default function FindingViewer({ findings, scanId }) {
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState('remediation'); // 'remediation' | 'evidence'
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isExportingJson, setIsExportingJson] = useState(false);
+  const [exportError, setExportError] = useState(null);
+
+  const handleDownloadPdf = async () => {
+    if (!scanId) return;
+    setIsExportingPdf(true);
+    setExportError(null);
+    try {
+      await api.downloadPdfReport(scanId);
+    } catch (err) {
+      setExportError(err.message);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
+  const handleDownloadJson = async () => {
+    if (!scanId) return;
+    setIsExportingJson(true);
+    setExportError(null);
+    try {
+      await api.downloadJsonReport(scanId);
+    } catch (err) {
+      setExportError(err.message);
+    } finally {
+      setIsExportingJson(false);
+    }
+  };
 
   if (!findings || findings.length === 0) {
     return (
@@ -37,7 +67,8 @@ export default function FindingViewer({ findings }) {
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
-      <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+      {/* Header bar with title and export buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div className="flex items-center space-x-2.5">
           <div className="p-2 bg-red-50 text-red-600 rounded-lg border border-red-100">
             <ShieldAlert className="w-5 h-5" />
@@ -47,10 +78,53 @@ export default function FindingViewer({ findings }) {
             <p className="text-xs text-slate-500">Root-cause defects identified during assessment</p>
           </div>
         </div>
-        <span className="text-xs text-slate-600 font-mono font-medium bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-          {findings.length} Defect{findings.length > 1 ? 's' : ''} Identified
-        </span>
+
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-slate-600 font-mono font-medium bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+            {findings.length} Defect{findings.length > 1 ? 's' : ''} Identified
+          </span>
+
+          {scanId && (
+            <>
+              {/* JSON Export Button */}
+              <button
+                onClick={handleDownloadJson}
+                disabled={isExportingJson}
+                title="Export standardized JSON audit report"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition shadow-2xs"
+              >
+                {isExportingJson ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <FileJson className="w-3.5 h-3.5 text-blue-600" />
+                )}
+                <span>Export JSON</span>
+              </button>
+
+              {/* PDF Download Button */}
+              <button
+                onClick={handleDownloadPdf}
+                disabled={isExportingPdf}
+                title="Download publication-quality executive PDF report"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition shadow-2xs"
+              >
+                {isExportingPdf ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                <span>Download PDF</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
+
+      {exportError && (
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+          {exportError}
+        </div>
+      )}
 
       {/* Findings Accordion List */}
       <div className="space-y-3">

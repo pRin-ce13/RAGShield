@@ -153,6 +153,46 @@ class ApiClient {
   async getScanPosture(scanId) {
     return this.request(`/findings/${scanId}/posture`);
   }
+
+  // --- Reports & Diffing ---
+  async getJsonReport(scanId) {
+    return this.request(`/reports/${scanId}/json`);
+  }
+
+  async downloadJsonReport(scanId) {
+    const data = await this.getJsonReport(scanId);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RAGShield_Report_${scanId.slice(0, 8)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
+
+  async downloadPdfReport(scanId) {
+    const token = this.getToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${API_BASE}/reports/${scanId}/pdf`, { headers });
+    if (!res.ok) {
+      throw new Error(`Failed to download PDF report (HTTP ${res.status})`);
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RAGShield_Audit_${scanId.slice(0, 8)}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
+
+  async compareScans(baseScanId, remediationScanId) {
+    return this.request(`/reports/compare?base_scan_id=${baseScanId}&remediation_scan_id=${remediationScanId}`);
+  }
 }
 
 export const api = new ApiClient();

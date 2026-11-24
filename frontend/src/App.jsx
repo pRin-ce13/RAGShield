@@ -192,7 +192,7 @@ export default function App() {
             />
 
             {/* Deduplicated Findings & Remediation Playbooks */}
-            <FindingViewer findings={findings} />
+            <FindingViewer findings={findings} scanId={activeScan?.id} />
           </div>
         )}
 

@@ -124,3 +124,10 @@ class ScanRun(Base):
         cascade="all, delete-orphan",
         lazy="selectin"
     )
+
+    @property
+    def duration_seconds(self) -> float:
+        """Calculates execution duration in seconds."""
+        if self.completed_at and self.started_at:
+            return round((self.completed_at - self.started_at).total_seconds(), 2)
+        return 0.0

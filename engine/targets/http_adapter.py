@@ -7,6 +7,7 @@ configurable timeouts, field mapping, authentication injection, and latency prof
 import asyncio
 import time
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 import httpx
 
 from .base import BaseTargetAdapter, TargetHealth, TargetResponse
@@ -52,8 +53,14 @@ class HTTPTargetAdapter(BaseTargetAdapter):
             client: Optional pre-configured httpx.AsyncClient (useful for testing).
         """
         self._target_name = target_name
-        self._base_url = base_url.rstrip("/")
-        self.query_path = query_path.strip("/")
+        parsed = urlparse(base_url)
+        # Normalize: if caller passed endpoint path in base_url (e.g. http://127.0.0.1:8001/query)
+        if parsed.path and parsed.path.rstrip("/") in ["/query", "/chat", "/v1/query", "/ask"]:
+            self._base_url = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+            self.query_path = parsed.path.lstrip("/")
+        else:
+            self._base_url = base_url.rstrip("/")
+            self.query_path = query_path.strip("/")
         self.health_path = health_path.strip("/")
         self.api_key = api_key
         self.auth_header = auth_header
@@ -124,6 +131,17 @@ class HTTPTargetAdapter(BaseTargetAdapter):
 
         try:
             response = await client.get(health_url, headers=headers)
+            if response.status_code == 404:
+                parsed = urlparse(self._base_url)
+                fallback_url = f"{parsed.scheme}://{parsed.netloc}/{self.health_path}"
+                if fallback_url != health_url:
+                    try:
+                        fallback_res = await client.get(fallback_url, headers=headers)
+                        if fallback_res.status_code == 200:
+                            response = fallback_res
+                    except Exception:
+                        pass
+
             elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
             
             try:

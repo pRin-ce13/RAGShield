@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # General App Information
     PROJECT_NAME: str = "RAGShield Security Platform"
-    VERSION: str = "0.7.0"
+    VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"

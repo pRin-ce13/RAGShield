@@ -30,8 +30,31 @@ A chronological record of architectural decisions, completed milestones, active 
   - *Reasoning:* Ensures RAGShield tests RAG systems as a black-box/gray-box client via HTTP adapters, rather than tightly coupling evaluation logic to the internal data structures of one specific RAG framework.
 
 ### Active Work
-- Completed Phase 9 (Advanced Security Testing) and Phase 9 Learning Report.
-- Preparing to start Phase 10 (Reports and Regression Testing).
+- Completed Phase 10 (Reports and Regression Testing) and Phase 10 Learning Report.
+- Preparing for System Testing, Verification, and Pre-Deployment User Review.
+
+---
+
+## [Phase 10] Reports and Regression Testing
+- **Date Completed:** 2026-11-24
+- **Status:** Completed
+
+### Completed Milestones
+1. **Standardized JSON Report Generator:** Created `engine/reporting/json_reporter.py` generating JSON audit reports conforming to Schema v1.0 with comprehensive metadata, target specifications, quantitative risk postures, OWASP LLM Top 10 breakdown, deduplicated findings, and prioritized remediation playbooks.
+2. **Executive PDF Report Generator:** Created `engine/reporting/pdf_reporter.py` leveraging ReportLab Platypus. Built a dynamic two-pass `NumberedCanvas` for running total page numbers, executive posture dashboard, severity distribution matrix, and formatted remediation playbooks with zero external OS library dependencies.
+3. **Scan Regression Diffing Engine:** Implemented `engine/reporting/diff.py` with `compare_scans()`. Leveraged deterministic vulnerability fingerprinting (`category:owasp:severity`) to classify defects into `FIXED`, `RECURRING`, and `NEW`, calculating `risk_posture_delta` and security delta summaries across baseline and remediation scans.
+4. **CI/CD Security Gate CLI Flags:** Extended `run_scan.py` with `--json <path>`, `--pdf <path>`, and `--fail-on-severity <CRITICAL|HIGH|MEDIUM|LOW>` flags (exiting with code 1 upon policy breach and 0 on compliance) for automated DevSecOps pipelines.
+5. **REST API Endpoints:** Built and registered `GET /api/v1/reports/{scan_id}/json`, `GET /api/v1/reports/{scan_id}/pdf`, and `GET /api/v1/reports/compare` in `backend/app/api/v1/reports.py`.
+6. **Frontend UI Integration:** Enhanced React dashboard with "Export JSON" and "Download PDF" direct download buttons in `FindingViewer.jsx` and added comparison client methods.
+7. **Documentation & Dependencies:** Installed `reportlab-5.1.0` in `.venv`, updated `requirements.txt`, documented in `docs/TECH_STACK_AND_LIBRARIES.md`, and authored comprehensive learning report in `docs/phase-reports/PHASE_10_REPORT.md`.
+
+### Decisions & Trade-Offs
+- **Decision:** Use ReportLab pure-Python PDF rendering over WeasyPrint.
+  - *Reasoning:* WeasyPrint requires external native C libraries (cairo, pango, gdk-pixbuf) which cause cross-platform installation issues on Windows; ReportLab compiles standalone binary PDFs with zero system DLLs.
+- **Decision:** Two-pass `NumberedCanvas` subclassing `canvas.Canvas`.
+  - *Reasoning:* Enables accurate `Page X of Y` footers by deferring footer drawing until the document layout has completely computed the total page count.
+
+---
 
 ---
 

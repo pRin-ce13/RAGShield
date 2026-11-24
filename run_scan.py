@@ -1,6 +1,7 @@
 """RAGShield Security Scanner - Command-Line Interface (CLI).
 
-Launches automated security vulnerability assessments against RAG targets.
+Launches automated security vulnerability assessments against RAG targets,
+generates PDF and JSON audit reports, and enforces CI/CD security regression gates.
 """
 
 import argparse
@@ -16,7 +17,17 @@ sys.path.insert(0, str(Path(".").resolve()))
 from engine.attacks.categories import AttackCategory, SeverityLevel
 from engine.evaluators import EvaluationPipeline, EvaluationResult, TestStatus
 from engine.orchestrator import ScanConfig, ScanOrchestrator, ScanProgress, ScanSummary
+from engine.reporting import build_security_report, export_json_report, generate_pdf_report
 from engine.scoring import FindingsManager, VulnerabilityFinding
+
+
+SEVERITY_RANKS = {
+    SeverityLevel.CRITICAL: 4,
+    SeverityLevel.HIGH: 3,
+    SeverityLevel.MEDIUM: 2,
+    SeverityLevel.LOW: 1,
+    SeverityLevel.INFO: 0,
+}
 
 
 def print_banner():
@@ -160,8 +171,36 @@ def display_findings(findings: list, risk_profile: dict):
     print("\n" + "=" * 80)
 
 
+def evaluate_security_gate(findings: List[VulnerabilityFinding], threshold_sev: str) -> bool:
+    """Enforces CI/CD pipeline pass/fail gate based on severity threshold.
+    
+    Returns True if passed, False if gate failed.
+    """
+    threshold_rank = SEVERITY_RANKS.get(SeverityLevel(threshold_sev.upper()), 3)
+    violating = [
+        f for f in findings
+        if SEVERITY_RANKS.get(f.severity, 0) >= threshold_rank
+    ]
+
+    print("\n" + "=" * 80)
+    print("  CI/CD SECURITY REGRESSION GATE EVALUATION")
+    print("=" * 80)
+    print(f"Enforced Severity Threshold: >= {threshold_sev.upper()}")
+
+    if violating:
+        print(f"❌ SECURITY GATE FAILED: {len(violating)} finding(s) met or exceeded threshold '{threshold_sev.upper()}':")
+        for v in violating:
+            print(f"   • [{v.severity.value}] {v.finding_id}: {v.title} (Risk: {v.risk_score:.1f})")
+        print("=" * 80)
+        return False
+    else:
+        print(f"✅ SECURITY GATE PASSED: Zero findings met or exceeded threshold '{threshold_sev.upper()}'.")
+        print("=" * 80)
+        return True
+
+
 def main():
-    parser = argparse.ArgumentParser(description="RAGShield Security Assessment Scanner")
+    parser = argparse.ArgumentParser(description="RAGShield Security Assessment Scanner & Report Generator")
     parser.add_argument("--url", default="http://127.0.0.1:8001", help="Target RAG API base URL")
     parser.add_argument("--target-name", default="Demo RAG Target", help="Name identifier for target")
     parser.add_argument("--api-key", default="demo_synthetic_insecure_key_for_testing", help="Target API key")
@@ -169,7 +208,14 @@ def main():
     parser.add_argument("--severity", choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"], help="Filter by CVSS severity")
     parser.add_argument("--concurrency", type=int, default=3, help="Max simultaneous requests")
     parser.add_argument("--timeout", type=float, default=10.0, help="Per-request timeout in seconds")
-    parser.add_argument("--output", help="Optional JSON file path to save raw execution results")
+    parser.add_argument("--output", help="Optional raw execution JSON output path")
+    parser.add_argument("--json", dest="json_report", help="Path to export standardized JSON audit report")
+    parser.add_argument("--pdf", dest="pdf_report", help="Path to export executive PDF security report")
+    parser.add_argument(
+        "--fail-on-severity",
+        choices=["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+        help="CI/CD gate: exit with code 1 if any finding meets or exceeds this severity"
+    )
 
     args = parser.parse_args()
     print_banner()
@@ -187,6 +233,25 @@ def main():
     risk_profile = findings_mgr.get_risk_profile(findings)
     display_findings(findings, risk_profile)
 
+    # Build standardized security report data
+    report_data = build_security_report(
+        summary=summary,
+        evaluations=evaluations,
+        findings=findings,
+        risk_profile=risk_profile
+    )
+
+    # Export JSON audit report if requested
+    if args.json_report:
+        export_json_report(report_data, output_path=args.json_report)
+        print(f"\n📄 Exported standardized JSON audit report to: {Path(args.json_report).resolve()}")
+
+    # Export PDF executive report if requested
+    if args.pdf_report:
+        generate_pdf_report(report_data, output_path=args.pdf_report)
+        print(f"📊 Exported publication-quality PDF audit report to: {Path(args.pdf_report).resolve()}")
+
+    # Export legacy raw execution JSON if requested
     if args.output:
         out_path = Path(args.output)
         output_payload = {
@@ -196,7 +261,13 @@ def main():
             "findings": [f.model_dump() for f in findings],
         }
         out_path.write_text(json.dumps(output_payload, indent=2, default=str), encoding="utf-8")
-        print(f"\nSaved raw scan execution, evaluations & findings to: {out_path.resolve()}")
+        print(f"Saved raw scan telemetry to: {out_path.resolve()}")
+
+    # Evaluate CI/CD security regression gate if requested
+    if args.fail_on_severity:
+        gate_passed = evaluate_security_gate(findings, args.fail_on_severity)
+        if not gate_passed:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -251,6 +251,29 @@ To understand our dependency choices, we categorize all technologies into five d
 - **Alternatives considered:** FontAwesome, React Icons.
 - **Dependency Type:** Direct frontend dependency (`frontend/package.json`).
 
+### `reportlab` (v5.1)
+- **Category:** Third-Party Python Package (PDF Generation Engine)
+- **What it is:** The open-source standard Python library for programmatically generating PDF documents and graphics.
+- **Why RAGShield needs it:** Generates professional, publication-quality executive security assessment reports and audit documentation.
+- **Which feature/module uses it:** `engine/reporting/pdf_reporter.py`
+- **How it works at a high level:** Uses ReportLab's Platypus (Page Layout and Typography Using Scripts) engine. It constructs a "Story" of flowable elements (`Paragraph`, `Table`, `Spacer`, `KeepTogether`) and compiles them onto a `SimpleDocTemplate` canvas, automatically handling multi-page pagination, word-wrapping, and color-coded severity tables.
+- **Small example from our code:**
+  ```python
+  from reportlab.lib.pagesizes import letter
+  from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, Spacer
+  from reportlab.lib.styles import getSampleStyleSheet
+
+  doc = SimpleDocTemplate("report.pdf", pagesize=letter)
+  story = [Paragraph("RAGShield Audit Report", getSampleStyleSheet()["Heading1"])]
+  doc.build(story)
+  ```
+- **Alternatives considered:**
+  - **WeasyPrint:** Converts HTML/CSS to PDF via headless browser engine. Extremely heavy; requires native C libraries (cairo, pango, gdk-pixbuf) that are notoriously difficult to install and maintain on Windows environments without external DLLs.
+  - **xhtml2pdf:** Converts HTML to PDF, but has buggy CSS3 support, poorly supported table wrapping, and frequent rendering artifacts.
+  - **PyPDF2 / pypdf:** PDF manipulation/concatenation libraries only; cannot easily generate complex styled documents from scratch.
+- **Why selected:** 100% pure Python runtime on Windows, zero external C library dependencies, deterministic multi-page flow layout, and enterprise-grade styling control.
+- **Dependency Type:** Direct backend dependency (`requirements.txt`).
+
 ---
 
 *(Additional libraries will be documented here as they are added in their respective phases.)*

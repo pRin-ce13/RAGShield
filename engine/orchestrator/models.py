@@ -93,3 +93,8 @@ class ScanSummary(BaseModel):
     completed_at: Optional[datetime] = None
     results: List[TestExecutionResult] = Field(default_factory=list)
     error: Optional[str] = None
+
+    @property
+    def completed_tests(self) -> int:
+        """Compatibility property returning count of executed tests."""
+        return len(self.results)
